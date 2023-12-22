@@ -1,68 +1,14 @@
 USE [KINGEJOE]
 GO
-/****** Object:  StoredProcedure [dbo].[LX_GERA_NFE_SEFAZ_4_00]    Script Date: 22/12/2023 12:18:14 ******/
+/****** Object:  StoredProcedure [dbo].[LX_GERA_NFE_SEFAZ_4_00]    Script Date: 22/12/2023 12:20:57 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
-
 ALTER PROCEDURE [dbo].[LX_GERA_NFE_SEFAZ_4_00]  @NOTAFISCAL VARCHAR(15), @SERIENOTA VARCHAR(6), @FILIALNOTA VARCHAR(25), @RETORNA_XML BIT = 0, @APP_VERSAO VARCHAR(20) = NULL
-	  
-AS	
+	--WITH ENCRYPTION 
+AS		
 /*
-30/05/2023  -	Juliana Nascimento #143# - PRODSHOP-19585 - 1.23.030 - Ajuste na tag IEST
-07/03/2023  -	FELIPE CUNHA	 - #142# - PRODSHOP-18311 - 2.22.050 - Ajuste na tag tpAto - Grupo Z B2C
-01/03/2023  -   Valmir Soares    - #141# - LINXERP-13645  - 2.22.050 - Padronização do nome do campo NOME_LOCAL_RETIRADA ref. ajuste #140#
-17/02/2023	-	Valmir Soares	 - #140# - LINXERP-6399  - 2.22.050 - Procedimentos relativos à ponto de retirada de mercadoria - Ajuste SINIEF nº 14, de 01.07.2022 - DOU de 06.07.2022 e Decreto nº 49.824, de 25.11.2020 - DOE PE de 26.11.2020
-03/02/2023	-	Valmir Soares	 - #139# - LINXERP-13188 - Fisco SC passa a exigir o preenchimento do campo cBenef no documento fiscal
-20/01/2022	-	Valmir Soares	 - #138# - LINXERP-13141 - Ajuste ref. retirada de espaços do nome dos campos
-04/01/2022	-	RODRIGO BARBOSA	 - #137# - LINXERP-9161  - Geração das novas Tags obsItem, obsCont e obsFisco no XML NFe
-23/11/2022  -   FELIPE CUNHA	 - #136# - LINXERP-9648 - 2.22.020 - Ajuste da Nova Tag tpAto - Grupo Z da NF-e	
-17/11/2022  -   FELIPE CUNHA	 - #135# - LINXERP-9648 - 2.22.020 - Nova Tag tpAto - Grupo Z da NF-e	
-10/11/2022  -   RODRIGO BARBOSA  - #134# - LINXEP-11953 - 2.22.020 - *******ISSUE CANCELADA*****    CRIAÇÃO DA TAG REFCTE QUANDO A NOTA REFERENCIADA FOR 57 - CT-E     *******CANCELADA**
-18/10/2022  -   CARLOS ALBERTO   - #133# - LINXEP-8263  - 2.22.010 - AJUSTES NAS TAGS DE CÓDIGO DE BENEFÍCIO.
-13/07/2022  -   Rodrigo Barbosa  - #132# - LINXEP-7774  - 1.22.040 - Incluídas as tags <pFCPDif>; <vFCPDif> e <vFCPEfet>.
-21/07/2022  -   Valmir Soares    - #131# - LINXERP-856  - 1.22.040 - Alteração na mensagem do FECP
-21/06/2022  -   CARLOS ALBERTO	 - #130# - LINXEP-10473 - 1.22.030 - AJUSTE PARA TRAZER O VALOR DAS PARCELAS A RECEBER CORRETAMENTE, MESMO QUE JÁ TENDO SIDO BAIXADAS POR AVISOS DE CRÉDITO
-03/05/2022  -   Marcelo Szalontai- #129# - LINXERP-9941 - 1.22.010 - Ajuste na correções #128# para não gerar conteudo na tag indproc
-28/04/2022  -   Felipe Cunha       #128# - LINXERP-9648 - 1.22.010 - Ajuste nas correções #126# e #127# para gerar a Tag indproc = 9 - Outros.
-25/04/2022  -   Marcelo Szalontai- #127# - LINXERP-9648 - 1.22.010 - Ajuste para mostrar a tag procRef somente quando NFE.TIPO_PROCESSO = 0
-19/04/2022  -   Rodrigo Barbosa  - #126# - LINXERP-9648 - 1.22.010 - preenchimento da nova tag tpAto, no grupo Z da NF-e Para atender a NT 2021.004
-18/04/2022  -   Marcelo Szalontai- #125# - LINXERP-9584 - 1.22.010 - Regra de validação Tipo Transporte
-                                                          Se Modalidade do Frete = 9 (id: X02, campo: modFrete), o Grupo Transportador (id: X03, campo: transporta) não pode ser informado
-15/02/2022  -   Valmir Soares    - #124# - LINXERP-8978 - Ajuste condição para gerar tag infAdProd
-12/11/2021  -   Marcelo Szalontai- #123# - LINXERP-6692 - ROT - Emissão de NF-e/NFC-e por optante do ROT-RS (Alteração na TAG ICMS - EFETIVO)
-11/10/2021  -   Marcelo Faria    - #122# - LINXERP-6519 - DUIMP - Tratamento para não informar tag quando for Duimp
-02/08/2021  -   Diego Quaresma   - #121# - LINXERP-3974 - ADEQUAÇÃO #120# AJUSTE NO NOME DOS CAMPOS PARA DEIXAR DE ACORDO COM POSSP-5157 (FISCALFLOW).
-26/02/2021  -   Diego Quaresma   - #120# - LINXERP-3974 - NF-e/NFC-e - NT 2020.006 - Versão 1.00 - dentificação do intermediador/marketplace.
-12/01/2021  -   Valmir Soares    - #119# - LINXERP-405  - Mensagem de Não Incidência de FECP em Dados Adicionais
-28/09/2020  -   Rodrigo Souza    - #118# - SUSTSP-1372  - Correção nas tags Pdevol e vIPIDevol.
-22/09/2020  -   Douglas Garcia   - #117# - SUSTSP-1225  - Ajuste na correção #96#, voltando a função de remoção de caracteres especiais
-27/01/2020  -   Douglas Garcia   - #116# - MODASP-10431 - Implementar versão completa do Service Pack/Hotfix na tag <verProc>
-27/12/2019  -   Edson Filenti    - #115# - ModaSP-8986  - Replicação - Correção de performance realizada pelo DBA Crispim. 
-08/10/2019  -	Edson Filenti    - #114# - MODASP-7003  - Ajuste no grupo ICMS 90, geração das tags. 
--#113#-
-25/09/2019  -   Diego Quaresma	 - #113# - MODASP-6507- Tratamento para gerar "SEM CBENEF" para CST 90 estado do Parana - PR
-20/09/2019  -   Carlos Gonçalves - #112# - MODASP-6238- Alterado da função FX_REPLACE_CARCTER_ESPECIAL_NFE para FX_REPLACE_CARCTER_ESPECIAL_REINF, pois nao pode remover "-" do codigo do produto  caso exista
-19/09/2019  -   Edson Filenti	 - #111# - MODASP-6385- Solicitado ajuste pelo analista Roberto Beda na seleção do IMCSST90. Bloco de seleção do imposto desonerado calculando apenas quando ocorrer ST. Ajuste para ser calculado em TODAS as situações.
-19/09/2019  -   Adalberto (WAFX) - #110# - MODASP-6083- Voltando alteração da tag #109#. 
-13/09/2019  -   Adalberto (WAFX) - #109# - MODASP-6083- Alteração da tag pDevol para finalidade 2 ou 4 e tipo operacao = D.
-11/09/2019  -   Adalberto (WAFX) - #108# - MODASP-6008- Alteração das tags pDIF, vICMSDIF e vICMS do CST-51 (diferimento).
-09/09/2019  -   Rodrigo Souza    - #107# - MODASP-5933- Correção na tag Pdevol em notas fiscais de entrada para evitar duplicidade.
-28/08/2019  -   Adalberto (WAFX) - #106# - MODASP-2930- retirando espaços a esquerda e direita da tag cBenef.
-28/08/2019  -   Adalberto (WAFX) - #105# - MODASP-2930- Voltando as alterações das tags pDIF, vICMSDIF e vICMS do CST-51 (diferimento).
-22/08/2019  -   Ailton (FCamara) - #104# - MODASP-4893- Verifica se o Código de Segurança é Fraco ou igual o número da NF, se for refaz para evitar rejeição no SEFAZ conforme NT 2019_001_v1
-19/08/2019  -   Adalberto (WAFX) - #103# - MODASP-2930- Alteração das tags pDIF, vICMSDIF e vICMS do CST-51 (diferimento). 
-13/08/2019  -   Adalberto (WAFX) - #102# - MODASP-2930- Correção para gerar a tag pDif para o CST-51 (diferimento). 
-02/08/2019  -   Adalberto (WAFX) - #101# - MODASP-2930- Correção para ordenar as tags vICMSDeson e motDesICMS corretamente para o CST-70. 
-													  - Correção para não gerar registros duplicados das tags vICMSDeson e motDesICMS. 
-23/07/2019  -   Adalberto (WAFX) - #100# - MODASP-2930- Alteração para não gerar as tags vICMSDeson e motDesICMS quando NFE_ITENS.ICMS_DESONERADO = 0. 
-11/07/2019  -   Adalberto (WAFX) - #99# - MODASP-2930- Alteração para atender Decreto 46.536/2018 SEFAZ RJ, desoneração do ICMS, alterar as tags vICMSDeson e motDesICMS. 
-24/06/2019  -   Ailton(FCamara)  - #98# - MODASP-2933- Substituição da função trim() por ltrim(rtrim()), necessário para manter compatibilidade com versões antigas do SQL Server
-13/06/2019  -   Ailton(FCamara)  - #97# - MODASP-2933- Alteração para atender Fisco do RJ por meio da Lei nº 8.405/2019, identificação de produtos que não estão sujeitos ao FCP, através de msg na tag infAdProd
-12/06/2019	-   Rodrigo Souza	 - #96# - DM 121887  - Correção para não remover caracter especial do nome da transportadora.
-22/05/2019  -   Wendel Crespigio - #95# - DM 119772  - Ajuste para quando o codigo da filial for diferentes entre filiais e loja varejo.
-13/05/2019  -   Edson Filenti    - #94# - DM 118921  - Ajuste de performance.  Avaliação feita junta a equipe DBA Maria e Crispim.
 23/04/2019	-   Rodrigo Souza	 - #93# - DM 115936  - Correção para gerar o a tag PDevol corretamente quando a entrada estiver utilizando os CFOPs ('1201','1202','1410','1411','5921','6921')
 22/04/2019  -   Szalontai        - #92# - DM 116856  - NOTA TECNICA 2018.005 Versão 1.20. As notas notas fiscais com o imposto efetivo, está gerando a tag vICMSSubstituto
                                                        Feita correção, tratando para trazer o tag vICMSSubstituto somente quando INDICA_OPERACAO_FINAL = 0
@@ -242,7 +188,6 @@ VERSÃO ATUALIZAÇÃO LINX: 1.00.0004
 14/10/2010 - PADIAL	- INCLUIDO O TRATAMENTO DO RTRIM NO CODIGO DO MUNICIPIO PARA O GRUPO IDE
 27/09/2010 - PADIAL -- INICIO DO DESENVOLVIMENTO DA NF-E
 */
-
 DECLARE --@NOTAFISCAL VARCHAR(7), @SERIENOTA VARCHAR(6), @FILIALNOTA VARCHAR(25),  
 		@NFE_XML XML, @NFE_XML_REPLACE VARCHAR(MAX), 
 		@CHAVEACESSO CHAR(44), @CODIGONF AS CHAR(9), @SOMAPONDERACOES AS INT,  @CNT INT, @PESO INT, @RESTODIVISAO INT, @DIGITOVERIFICADOR CHAR(1),
@@ -251,25 +196,14 @@ DECLARE --@NOTAFISCAL VARCHAR(7), @SERIENOTA VARCHAR(6), @FILIALNOTA VARCHAR(25)
 		@CNPJ_EMITENTE VARCHAR(14),	@CIDADE_EMITENTE VARCHAR(35), @UF_EMITENTE CHAR(2), @AAMM_EMISSAO CHAR(4),
 		@MODELO CHAR(2), @TIPO_EMISSAO TINYINT, @VERSAO_CHAVE_NFE CHAR(6), @CODIGO_UF_IBGE CHAR(2), @SERIENOTA_OFICIAL VARCHAR(6), @VERSAO_LAYOUT_XML_NFE VARCHAR(5), @EMAIL_NFE VARCHAR(60), @EMAIL_DESTINATARIO VARCHAR(100), 
 		@OBS_INTERESSE_FISCO VARCHAR(2000), @COD_MUNICIPIO_IBGE CHAR(7), @TIPO_DOC_CHAVE CHAR(2), @CLIFOR_FILIALNOTA CHAR(6),@NF_NUMERO_REFERENCIADA char(1), --#49#
-		@QTDE_PARCELA int,--#64#
-		@CODIGO_FILIAL char(6) --#115#
-		,@OPTANTE_ROT bit /*#123#*/
-		,@BAIXA_IAC_FATURAMENTO BIT /*#130#*/
+		@QTDE_PARCELA int --#64#
 
 --#53# 
 
 ---@APP_VERSAO VARCHAR(20)  PARAMETRO DE ASSINATURA DO LINXPOS
 
-SELECT @BAIXA_IAC_FATURAMENTO = CASE WHEN ISNULL(DBO.FX_PARAMETRO('BAIXA_IAC_POR_FATURAMENTO'), '.F.') = '.F.' THEN 0 ELSE 1 END /*#130#*/
-
-
 declare @VERPROC VARCHAR(20),@LINX_VERSAO VARCHAR(50),@VER_LINX_SERVICE_PACK VARCHAR(50),@VER_HOTFIX VARCHAR(50)
 		,@DATA_VALIDADE_CFOP_EXPE date/*#60#*/
-
---#115#	Obter o codigo da filial para passar como filtro em algumas views e tabelas que possuem o campo codigo_filial ao invés do campo filial.
-SELECT @CODIGO_FILIAL = CODIGO_FILIAL FROM dbo.LOJAS_VAREJO as lj where  lj.FILIAL = @FILIALNOTA 
-
-DECLARE @INF_AD_ALIQ_PROD_NA_OBS BIT = CASE WHEN dbo.fx_parametro('INF_AD_COB_ALIQ_NF_NA_OBS')='.T.' THEN 1 ELSE 0 END -- #119#
 
 /*#60# - Inicio*/
 SELECT @DATA_VALIDADE_CFOP_EXPE = GETDATE()
@@ -320,23 +254,17 @@ BEGIN
 --#53# 
 --#54# 
  
-        --SET @LINX_VERSAO = REPLACE(REPLACE(@LINX_VERSAO, '.', ''), '0', '') #116#
+        SET @lINX_VERSAO = REPLACE(REPLACE(@lINX_VERSAO, '.', ''), '0', '')
   
-        IF @VER_LINX_SERVICE_PACK <> SUBSTRING(@VER_HOTFIX, 1, 5)
+        IF @vER_LINX_SERVICE_PACK <> SUBSTRING(@vER_HOTFIX, 1, 5)
             BEGIN
-				/* #116# - Início */
-                /*SET @VER_LINX_SERVICE_PACK = SUBSTRING(@VER_LINX_SERVICE_PACK, 2, 1) + SUBSTRING(@VER_LINX_SERVICE_PACK, 4, 2)
-				SET @VERPROC = 'LINXERP'+LTRIM(RTRIM(@LINX_VERSAO)) + LTRIM(RTRIM(@VER_LINX_SERVICE_PACK))*/
-				SET @VERPROC = LTRIM(RTRIM(@LINX_VERSAO)) + '-' + LTRIM(RTRIM(@VER_LINX_SERVICE_PACK))
-				/* #116# - Fim */
+                SET @vER_LINX_SERVICE_PACK = SUBSTRING(@vER_LINX_SERVICE_PACK, 2, 1) + SUBSTRING(@vER_LINX_SERVICE_PACK, 4, 2)
+                SET @vERPROC = 'LinxERP'+LTRIM(RTRIM(@lINX_VERSAO)) + LTRIM(RTRIM(@vER_LINX_SERVICE_PACK))
             END
         ELSE
             BEGIN
-				/* #116# - Início */
-                /*SET @VER_HOTFIX = SUBSTRING(@VER_HOTFIX, 2, 1) + SUBSTRING(@VER_HOTFIX, 4, 2) + RIGHT(RTRIM(SUBSTRING(@VER_HOTFIX, 7, 5)), 2)
-				SET @VERPROC = 'LINXERP'+LTRIM(RTRIM(@LINX_VERSAO)) + LTRIM(RTRIM(@VER_HOTFIX))*/
-				SET @VERPROC = LTRIM(RTRIM(@LINX_VERSAO)) + '-' + LTRIM(RTRIM(@VER_HOTFIX))
-				/* #116# - Fim */
+                SET @vER_HOTFIX = SUBSTRING(@vER_HOTFIX, 2, 1) + SUBSTRING(@vER_HOTFIX, 4, 2) + RIGHT(RTRIM(SUBSTRING(@vER_HOTFIX, 7, 5)), 2)
+                SET @vERPROC = 'LinxERP'+LTRIM(RTRIM(@lINX_VERSAO)) + LTRIM(RTRIM(@vER_HOTFIX))
             END
 --#54# 
 END;
@@ -348,6 +276,12 @@ SELECT @MODELO = RTRIM(ES.NUMERO_MODELO_FISCAL), @SERIENOTA_OFICIAL = SN.COD_SER
 WHERE SERIE_NF = @SERIENOTA
 
 SELECT @CHAVEACESSO = NULL
+-- inicio rafael megasult -- rodar procedure do diferimento
+
+EXEC LX_MEGA_AJUSTA_DIFERIMENTO @NOTAFISCAL , @SERIENOTA , @FILIALNOTA 
+
+-- fim rafael megasult
+
 
 --SELECT @VERSAO_CHAVE_NFE = (SELECT RTRIM(VALOR_ATUAL) FROM PARAMETROS WHERE PARAMETRO = 'VERSAO_LAYOUT_XML_NFE')
 
@@ -382,9 +316,7 @@ SELECT @QTDE_PARCELA = case when MAX(isnull(PARCELA,0)) = 0 then 1 else MAX(PARC
 
 
 --#13#
-select	@CLIFOR_FILIALNOTA = CLIFOR
-		,@OPTANTE_ROT = OPTANTE_ROT /*#123#*/
-FROM FILIAIS WHERE FILIAL = @FILIALNOTA
+select @CLIFOR_FILIALNOTA = CLIFOR FROM FILIAIS WHERE FILIAL = @FILIALNOTA
 
 --#1#/#2#
 SELECT @VALOR_IMPOSTO_ITEM = CASE WHEN sum(ISNULL(VALOR_IMPOSTO_ITEM,0)) = 0 THEN '0.00' ELSE 
@@ -418,14 +350,6 @@ IF @CHAVEACESSO IS NULL
 			BEGIN
 				SELECT @CODIGONF = RIGHT(STR(RAND(),11,9),9) 
 
-				--#104# - Início - Verifica se o Código de Segurança é Fraco ou igual o número da NF, se for refaz para evitar rejeição no SEFAZ conforme NT 2019_001_v1
-				While exists(Select @CODIGONF where @CODIGONF in ('00000000', '11111111', '22222222', '33333333', '44444444', '55555555', '66666666', '77777777', '88888888', '99999999', '12345678', '23456789', '34567890', '45678901', '56789012', '67890123', '78901234', '89012345', '90123456', '01234567')) or
-					  exists(select @CODIGONF where @CODIGONF = RTRIM(LTRIM(CONVERT(INTEGER,@NOTAFISCAL)))) -- Faz o convert de @NOTAFISCAL conforme a gravação da tag "nNF" (Ver Abaixo)
-					Begin
-						Select @CODIGONF = RIGHT(STR(RAND(),11,9),9) 
-					End
-				--#104# - Fim
-
 				SELECT @CHAVEACESSO = @CODIGO_UF_IBGE +
 										@AAMM_EMISSAO +
 										@CNPJ_EMITENTE +
@@ -439,14 +363,6 @@ IF @CHAVEACESSO IS NULL
 		IF RTRIM(@VERSAO_CHAVE_NFE) = '2.00' OR RTRIM(@VERSAO_CHAVE_NFE) = '3.10' OR RTRIM(@VERSAO_CHAVE_NFE) = '4.00'  -- VERSAO 2.00 #61#
 			BEGIN
 				SELECT @CODIGONF = RIGHT(STR(RAND(),11,9),8) 
-
-				--#104# - Início - Verifica se o Código de Segurança é Fraco ou igual o número da NF, se for refaz para evitar rejeição no SEFAZ conforme NT 2019_001_v1   
-				While exists(Select @CODIGONF where @CODIGONF in ('00000000', '11111111', '22222222', '33333333', '44444444', '55555555', '66666666', '77777777', '88888888', '99999999', '12345678', '23456789', '34567890', '45678901', '56789012', '67890123', '78901234', '89012345', '90123456', '01234567')) or
-					  exists(select @CODIGONF where @CODIGONF = RTRIM(LTRIM(CONVERT(INTEGER,@NOTAFISCAL)))) -- Faz o convert de @NOTAFISCAL conforme a gravação da tag "nNF" (Ver Abaixo)
-					Begin
-						Select @CODIGONF = RIGHT(STR(RAND(),11,9),8) 
-					End
-				--#104# - Fim
 
 				SELECT @CHAVEACESSO = @CODIGO_UF_IBGE +
 										@AAMM_EMISSAO +
@@ -571,7 +487,8 @@ SELECT  'SUBSTITUIR' "@SUBSTITUI1",
 				RTRIM(NFE.EMITENTE_COD_MUNICIPIO_IBGE)								"cMunFG",	-- CODIGO DO IBGE
 
 	-- Edson -  removido	Bloco NFREF		
-						
+		
+				
 				 
 			LTRIM(RTRIM(NFE.FORMATO_IMP_DANFE_NFE))																			"tpImp",		-- PARAMETRO DE ONDE SERA INFORMADO O TIPO DO FORMATO DA IMPRESSAO DO DANFE (RETRATO OU PAISAGEM)
 			CASE WHEN ISNULL(NFE.TIPO_EMISSAO_NFE,'') = '' THEN 1 ELSE RTRIM(NFE.TIPO_EMISSAO_NFE) END						"tpEmis",		-- FORMA EMISSAO DANFE 1-NORMAL / 2-CONTINGENCIA 
@@ -580,12 +497,6 @@ SELECT  'SUBSTITUIR' "@SUBSTITUI1",
 			CASE WHEN ISNULL(NFE.FIN_EMISSAO_NFE,'') = '' THEN 1 ELSE RTRIM(NFE.FIN_EMISSAO_NFE) END						"finNFe",		-- 1-NFE NORMAL/ 2-NFE COMPLEMENTAR / 3-NFE AJUSTE   
 			RTRIM(NFE.INDICA_OPERACAO_FINAL)																				"indFinal",		--#8#
 			RTRIM(NFE.INDICA_PRESENCA_COMPRADOR)																			"indPres",		--#9#
-			CASE WHEN RTRIM(NFE.INDICA_PRESENCA_COMPRADOR) IN (2,3,4,9) 
-							AND NFE.INTERMERDIADOR_IDCADINTTRAN IS NOT NULL THEN 1 			
-				 WHEN		RTRIM(NFE.INDICA_PRESENCA_COMPRADOR) IN (2,3,4,9) 
-							AND NFE.INTERMERDIADOR_IDCADINTTRAN IS NULL THEN 0 
-							
-			ELSE NULL END																									"indIntermed",	--#120# --#121#
 			0																												"procEmi",		-- PROCESSO DE EMISSAO DA NFE
 --#53#
 --			RTRIM(NFE.VERSAO_EMISSOR_NFE)																					"verProc",		-- VERSAO DO LINX / RETAGUARDA OU LOJA 
@@ -599,8 +510,10 @@ SELECT  'SUBSTITUIR' "@SUBSTITUI1",
 																						                
 --#53#
 
+
 			CASE WHEN NFE.TIPO_EMISSAO_NFE = 1 THEN NULL ELSE CONVERT(VARCHAR(25),NFE.DATA_CONTINGENCIA_UTC,126) END		"dhCont",		--(2.0) contingencia somente para tipo emissao <> 1 #23#
 			CASE WHEN NFE.TIPO_EMISSAO_NFE = 1 THEN NULL ELSE DBO.FX_REPLACE_CARACTER_ESPECIAL_NFE(DEFAULT,NFE.JUSTIFICATIVA_CONTINGENCIA) END	"xJust",				-- (2.0)
+
 
 	---------------------------------------------------------------------------------	
 	--Edson Inicio	#40# [Inicio]							
@@ -694,14 +607,13 @@ SELECT  'SUBSTITUIR' "@SUBSTITUI1",
 					FROM W_REFERENCIA_ECF_NFE_DEV	   
 						WHERE W_REFERENCIA_ECF_NFE_DEV.NF = @NOTAFISCAL
 						AND W_REFERENCIA_ECF_NFE_DEV.SERIE = @SERIENOTA
-						AND W_REFERENCIA_ECF_NFE_DEV.FILIAL = @CODIGO_FILIAL /* #47# #115# Alteração de @filialnota para @codigo_Filial */
+						AND W_REFERENCIA_ECF_NFE_DEV.FILIAL = @FILIALNOTA /* #47# */
 					  --AND W_REFERENCIA_ECF_NFE_DEV.ORIGEM_ENTRADA_SAIDA = @TIPO_DOC	
 						AND W_REFERENCIA_ECF_NFE_DEV.CHAVE_NFE_ORIGEM IS NULL
 			FOR XML PATH('NFref'),TYPE 
 			)
 		--EDSON #14#			
 -- Edson Fim #40# [Fim]
-
 		---------------------------------------------------------------------------------
 		FOR XML PATH(''), TYPE 
 	) AS ide,
@@ -737,8 +649,8 @@ SELECT  'SUBSTITUIR' "@SUBSTITUI1",
 		) AS enderEmit,		
 		---------------------------------------------------------------------------------	
 			CASE WHEN ISNULL(NFE.IE_EMITENTE,'') = '' THEN NULL ELSE DBO.FX_REPLACE_CARACTER_ESPECIAL_NFE(1,NFE.IE_EMITENTE) END		"IE",
-			CASE WHEN (NFE.ICMS_ST > 0 OR NFE.ICMS_STR > 0 OR NFE.DICMS>0) AND NFE.UF = NFE.ENTREGA_UF THEN DBO.FX_REPLACE_CARACTER_ESPECIAL_NFE(1,NFE.IEST) ELSE NULL END "IEST",	-- CRIADO "IEST PARA SUBSTITUIÇÃO TRIBUTÁRIA" #143#
-		  --CASE WHEN ISNULL(NFE.IEST,'') = '' THEN NULL ELSE DBO.FX_REPLACE_CARACTER_ESPECIAL_NFE(1,NFE.IEST) END  AS					"IEST",	-- CRIADO "IEST PARA SUBSTITUIÇÃO TRIBUTÁRIA" #45#
+			--CASE WHEN (NFE.ICMS_ST > 0 OR NFE.ICMS_STR > 0) THEN DBO.FX_REPLACE_CARACTER_ESPECIAL_NFE(1,NFE.IEST) ELSE NULL END			"IEST",	-- CRIADO "IEST PARA SUBSTITUIÇÃO TRIBUTÁRIA"
+			CASE WHEN ISNULL(NFE.IEST,'') = '' THEN NULL ELSE DBO.FX_REPLACE_CARACTER_ESPECIAL_NFE(1,NFE.IEST) END  AS					"IEST",	-- CRIADO "IEST PARA SUBSTITUIÇÃO TRIBUTÁRIA" #45#
 			CASE WHEN (NFE.ISS_R > 0 OR NFE.ISS > 0) THEN DBO.FX_REPLACE_CARACTER_ESPECIAL_NFE(1,NFE.IM_EMITENTE) ELSE NULL END 		"IM",   --0.1 = CRIADO O CAMPO
 			CASE WHEN (NFE.ISS_R > 0 OR NFE.ISS > 0) THEN DBO.FX_REPLACE_CARACTER_ESPECIAL_NFE(1,NFE.CNAE) ELSE NULL END				"CNAE",	--0.1 = CRIADO O CAMPO
 			NFE.CRT	  "CRT"	--(2.0)
@@ -799,85 +711,6 @@ SELECT  'SUBSTITUIR' "@SUBSTITUI1",
 		FOR XML PATH(''), TYPE 
 	) AS dest,
 
-
-	-- LOCAL DE RETIRADA (SAÍDAS) -- #140# -- #141#
-		( 	
-			SELECT CASE WHEN NFE.RETIRADA_PJ_PF = 1 AND NFE.RETIRADA_ENTREGA_UF  <> 'EX' THEN RTRIM(NFE.RETIRADA_ENTREGA_CGC) ELSE NULL END					"CNPJ",
-					CASE WHEN NFE.RETIRADA_PJ_PF = 1 AND NFE.RETIRADA_ENTREGA_UF  = 'EX' THEN '' ELSE NULL END												"CNPJ",
-					CASE WHEN NFE.RETIRADA_PJ_PF = 0 AND NFE.RETIRADA_ENTREGA_UF <> 'EX' THEN RTRIM(NFE.RETIRADA_ENTREGA_CGC) ELSE NULL END					"CPF",	 -- (2.0)
-					CASE WHEN NFE.RETIRADA_PJ_PF = 0 AND NFE.RETIRADA_ENTREGA_UF  = 'EX' THEN '' ELSE NULL END												"CNPJ",			
-					DBO.FX_REPLACE_CARACTER_ESPECIAL_NFE(DEFAULT,SUBSTRING(NFE.RETIRADA_ENTREGA_RAZAO_SOCIAL,1,60))											"xNome",
-					SUBSTRING(DBO.FX_REPLACE_CARACTER_ESPECIAL_NFE(DEFAULT,NFE.RETIRADA_ENTREGA_ENDERECO),1,60)												"xLgr",
-					CASE WHEN NFE.RETIRADA_ENTREGA_NUMERO = '' OR NFE.RETIRADA_ENTREGA_NUMERO IS NULL 
-						THEN '0' 
-						ELSE DBO.FX_REPLACE_CARACTER_ESPECIAL_NFE(DEFAULT,NFE.RETIRADA_ENTREGA_NUMERO) END													"nro",
-					CASE WHEN NFE.RETIRADA_ENTREGA_COMPLEMENTO = '' OR NFE.RETIRADA_ENTREGA_COMPLEMENTO IS NULL 
-						THEN NULL 
-						ELSE DBO.FX_REPLACE_CARACTER_ESPECIAL_NFE(DEFAULT,NFE.RETIRADA_ENTREGA_COMPLEMENTO) END												"xCpl",
-					DBO.FX_REPLACE_CARACTER_ESPECIAL_NFE(DEFAULT,NFE.RETIRADA_ENTREGA_BAIRRO)																"xBairro",
-					CASE WHEN NFE.RETIRADA_ENTREGA_UF = 'EX' THEN '9999999' ELSE 
-						RTRIM(NFE.RETIRADA_COD_MUNICIPIO_IBGE_ENTREGA) END																					"cMun",	-- BUSCAR O CODIGO DO MUNICIPIO DO IBGE
-					CASE WHEN NFE.RETIRADA_ENTREGA_UF = 'EX' THEN 'EXTERIOR' ELSE 
-						DBO.FX_REPLACE_CARACTER_ESPECIAL_NFE(DEFAULT,NFE.RETIRADA_ENTREGA_CIDADE) END														"xMun",
-					RTRIM(NFE.RETIRADA_ENTREGA_UF)																											"UF",
-					DBO.FX_REPLACE_CARACTER_ESPECIAL_NFE(1,RTRIM(NFE.RETIRADA_ENTREGA_CEP))																	"CEP",
-					(SELECT TOP 1 RIGHT(RTRIM(COD_PAIS_BC),4) FROM LCF_LX_PAIS WHERE DESC_PAIS = NFE.RETIRADA_ENTREGA_PAIS)									"cPais", -- CODIGO DO PAIS DO IBGE
-					DBO.FX_REPLACE_CARACTER_ESPECIAL_NFE(DEFAULT,NFE.RETIRADA_ENTREGA_PAIS)																	"xPais",
-
-					CASE WHEN NFE.RETIRADA_ENTREGA_DDD IS NOT NULL AND NFE.RETIRADA_ENTREGA_TELEFONE IS NOT NULL AND (RETIRADA_ENTREGA_DDD + RETIRADA_ENTREGA_TELEFONE) <> '' AND NFE.UF <> 'EX'
-						THEN RIGHT(RTRIM(NFE.RETIRADA_ENTREGA_DDD),2) + RIGHT(RTRIM(DBO.FX_REPLACE_CARACTER_ESPECIAL_NFE(1,NFE.RETIRADA_ENTREGA_TELEFONE)),9) --#46#
-						ELSE NULL END																														"fone",						
-					CASE WHEN NFE.DDI IS NOT NULL AND NFE.RETIRADA_ENTREGA_DDD IS NOT NULL AND NFE.RETIRADA_ENTREGA_TELEFONE IS NOT NULL AND (DDI + RETIRADA_ENTREGA_DDD + RETIRADA_ENTREGA_TELEFONE) <> '' AND NFE.UF = 'EX'
-						THEN RIGHT(RTRIM(NFE.DDI),5) + RIGHT(RTRIM(NFE.RETIRADA_ENTREGA_DDD),2) + RIGHT(RTRIM(DBO.FX_REPLACE_CARACTER_ESPECIAL_NFE(1,NFE.RETIRADA_ENTREGA_TELEFONE)),9) --#46#
-						ELSE NULL END																														"fone",
-					LTRIM(RTRIM(NFE.RETIRADA_EMAIL_NFE))																									"email",
-					CASE WHEN ISNULL(NFE.RETIRADA_ENTREGA_IE,'') = '' OR NFE.RETIRADA_PJ_PF = 0 THEN NULL ELSE DBO.FX_REPLACE_CARACTER_ESPECIAL_NFE(1,NFE.RETIRADA_ENTREGA_IE) END AS "IE"
-			WHERE RIGHT(RTRIM(NFE.ORIGEM_NF),1) = 'S' 
-			  AND NFE.NOME_LOCAL_RETIRADA IS NOT NULL AND NFE.NOME_LOCAL_RETIRADA<>NFE.NOME_CLIFOR AND NFE.INDICA_PRESENCA_COMPRADOR IN (2,3)
-			FOR XML PATH(''), TYPE 
-		) AS retirada,
-	-- LOCAL DE RETIRADA (SAÍDAS) -- #140# -- #141#
-
-
-	-- LOCAL DE ENTREGA (ENTRADAS) -- #140# -- #141#
-		( 	
-			SELECT CASE WHEN NFE.RETIRADA_PJ_PF = 1 AND NFE.RETIRADA_ENTREGA_UF  <> 'EX' THEN RTRIM(NFE.RETIRADA_ENTREGA_CGC) ELSE NULL END					"CNPJ",
-					CASE WHEN NFE.RETIRADA_PJ_PF = 1 AND NFE.RETIRADA_ENTREGA_UF  = 'EX' THEN '' ELSE NULL END												"CNPJ",
-					CASE WHEN NFE.RETIRADA_PJ_PF = 0 AND NFE.RETIRADA_ENTREGA_UF <> 'EX' THEN RTRIM(NFE.RETIRADA_ENTREGA_CGC) ELSE NULL END					"CPF",	 -- (2.0)
-					CASE WHEN NFE.RETIRADA_PJ_PF = 0 AND NFE.RETIRADA_ENTREGA_UF  = 'EX' THEN '' ELSE NULL END												"CNPJ",			
-					DBO.FX_REPLACE_CARACTER_ESPECIAL_NFE(DEFAULT,SUBSTRING(NFE.RETIRADA_ENTREGA_RAZAO_SOCIAL,1,60))											"xNome",
-					SUBSTRING(DBO.FX_REPLACE_CARACTER_ESPECIAL_NFE(DEFAULT,NFE.RETIRADA_ENTREGA_ENDERECO),1,60)												"xLgr",
-					CASE WHEN NFE.RETIRADA_ENTREGA_NUMERO = '' OR NFE.RETIRADA_ENTREGA_NUMERO IS NULL 
-						THEN '0' 
-						ELSE DBO.FX_REPLACE_CARACTER_ESPECIAL_NFE(DEFAULT,NFE.RETIRADA_ENTREGA_NUMERO) END													"nro",
-					CASE WHEN NFE.RETIRADA_ENTREGA_COMPLEMENTO = '' OR NFE.RETIRADA_ENTREGA_COMPLEMENTO IS NULL 
-						THEN NULL 
-						ELSE DBO.FX_REPLACE_CARACTER_ESPECIAL_NFE(DEFAULT,NFE.RETIRADA_ENTREGA_COMPLEMENTO) END												"xCpl",
-					DBO.FX_REPLACE_CARACTER_ESPECIAL_NFE(DEFAULT,NFE.RETIRADA_ENTREGA_BAIRRO)																"xBairro",
-					CASE WHEN NFE.RETIRADA_ENTREGA_UF = 'EX' THEN '9999999' ELSE 
-						RTRIM(NFE.RETIRADA_COD_MUNICIPIO_IBGE_ENTREGA) END																					"cMun",	-- BUSCAR O CODIGO DO MUNICIPIO DO IBGE
-					CASE WHEN NFE.RETIRADA_ENTREGA_UF = 'EX' THEN 'EXTERIOR' ELSE 
-						DBO.FX_REPLACE_CARACTER_ESPECIAL_NFE(DEFAULT,NFE.RETIRADA_ENTREGA_CIDADE) END														"xMun",
-					RTRIM(NFE.RETIRADA_ENTREGA_UF)																											"UF",
-					DBO.FX_REPLACE_CARACTER_ESPECIAL_NFE(1,RTRIM(NFE.RETIRADA_ENTREGA_CEP))																	"CEP",
-					(SELECT TOP 1 RIGHT(RTRIM(COD_PAIS_BC),4) FROM LCF_LX_PAIS WHERE DESC_PAIS = NFE.RETIRADA_ENTREGA_PAIS)									"cPais", -- CODIGO DO PAIS DO IBGE
-					DBO.FX_REPLACE_CARACTER_ESPECIAL_NFE(DEFAULT,NFE.RETIRADA_ENTREGA_PAIS)																	"xPais",
-
-					CASE WHEN NFE.RETIRADA_ENTREGA_DDD IS NOT NULL AND NFE.RETIRADA_ENTREGA_TELEFONE IS NOT NULL AND (RETIRADA_ENTREGA_DDD + RETIRADA_ENTREGA_TELEFONE) <> '' AND NFE.UF <> 'EX'
-						THEN RIGHT(RTRIM(NFE.RETIRADA_ENTREGA_DDD),2) + RIGHT(RTRIM(DBO.FX_REPLACE_CARACTER_ESPECIAL_NFE(1,NFE.RETIRADA_ENTREGA_TELEFONE)),9) --#46#
-						ELSE NULL END																														"fone",						
-					CASE WHEN NFE.DDI IS NOT NULL AND NFE.RETIRADA_ENTREGA_DDD IS NOT NULL AND NFE.RETIRADA_ENTREGA_TELEFONE IS NOT NULL AND (DDI + RETIRADA_ENTREGA_DDD + RETIRADA_ENTREGA_TELEFONE) <> '' AND NFE.UF = 'EX'
-						THEN RIGHT(RTRIM(NFE.DDI),5) + RIGHT(RTRIM(NFE.RETIRADA_ENTREGA_DDD),2) + RIGHT(RTRIM(DBO.FX_REPLACE_CARACTER_ESPECIAL_NFE(1,NFE.RETIRADA_ENTREGA_TELEFONE)),9) --#46#
-						ELSE NULL END																														"fone",
-					LTRIM(RTRIM(NFE.RETIRADA_EMAIL_NFE))																									"email",
-					CASE WHEN ISNULL(NFE.RETIRADA_ENTREGA_IE,'') = '' OR NFE.RETIRADA_PJ_PF = 0 THEN NULL ELSE DBO.FX_REPLACE_CARACTER_ESPECIAL_NFE(1,NFE.RETIRADA_ENTREGA_IE) END AS "IE"
-			WHERE RIGHT(RTRIM(NFE.ORIGEM_NF),1) = 'E' 
-			  AND NFE.NOME_LOCAL_RETIRADA IS NOT NULL AND NFE.NOME_LOCAL_RETIRADA<>NFE.NOME_CLIFOR AND NFE.INDICA_PRESENCA_COMPRADOR IN (2,3)
-			FOR XML PATH(''), TYPE 
-		) AS entrega,
-	-- LOCAL DE RETIRADA (ENTRADAS) -- #140# -- #141#
-
-
 ------- RETIRADA (NAO INCLUI ESTE GRUPO)
 
 ------- ENTREGA
@@ -925,7 +758,7 @@ SELECT  'SUBSTITUIR' "@SUBSTITUI1",
 ------- PROD		
 			(
 
-				SELECT DBO.FX_REPLACE_CARACTER_ESPECIAL_REINF(NFE_ITENS.CODIGO_ITEM)											"cProd", --#112#
+				SELECT DBO.FX_REPLACE_CARACTER_ESPECIAL_NFE(DEFAULT,NFE_ITENS.CODIGO_ITEM)											"cProd",
 					NFE_ITENS.EAN																									"cEAN",	-- ???(2.0) CRIAR FUNCAO
 					DBO.FX_REPLACE_CARACTER_ESPECIAL_NFE(DEFAULT,NFE_ITENS.DESCRICAO_ITEM)											"xProd",
 
@@ -950,32 +783,9 @@ SELECT  'SUBSTITUIR' "@SUBSTITUI1",
 					  AND NFE_ITENS_NVE.SUB_ITEM_TAMANHO = NFE_ITENS.SUB_ITEM_TAMANHO
 				FOR XML PATH(''), TYPE),
 
-				REPLACE(NFE_ITENS.CODIGO_CEST,'.','')																				"CEST",	  --#42#	
-				/*#133#
-				CASE WHEN RTRIM(NFE_ITENS.TRIBUT_ICMS) = '90' 
-						AND RTRIM(LTRIM(NFE.UF_EMITENTE)) = 'PR' 
-						AND RTRIM(LTRIM(NFE_ITENS.SUB_ITEM_SPED)) IS NULL
-						THEN 'SEM CBENEF' 
-				ELSE CASE WHEN RTRIM(LTRIM(NFE_ITENS.SUB_ITEM_SPED)) = '' THEN NULL 
-				ELSE RTRIM(LTRIM(NFE_ITENS.SUB_ITEM_SPED)) END END																	"cBenef", --#86#-#106#-#113#- 
-				*/
-				/*#133#*/
-				CASE WHEN RTRIM(NFE_ITENS.TRIBUT_ICMS) = '90' AND RTRIM(LTRIM(NFE.UF_EMITENTE)) IN ('GO', 'PR', 'RS', 'RJ', 'DF', 'SC') --#139#	
-					 THEN CASE WHEN RTRIM(LTRIM(NFE.UF_EMITENTE)) IN ('GO', 'PR', 'RS', 'SC') --#139#	
-									AND RTRIM(LTRIM(ISNULL(NFE_ITENS.SUB_ITEM_SPED,''))) = ''
-							   THEN 'SEM CBENEF' 
-							   ELSE CASE WHEN RTRIM(LTRIM(ISNULL(NFE_ITENS.SUB_ITEM_SPED,''))) = '' 
-										 THEN NULL 
-										 ELSE RTRIM(LTRIM(ISNULL(NFE_ITENS.SUB_ITEM_SPED,''))) 
-									END 
-						  END
-					ELSE CASE WHEN RTRIM(LTRIM(NFE_ITENS.SUB_ITEM_SPED)) = '' 
-							  THEN NULL 
-							  ELSE RTRIM(LTRIM(NFE_ITENS.SUB_ITEM_SPED)) 
-						 END 
-				END																													"cBenef",
-				/*#133#*/
 
+				REPLACE(NFE_ITENS.CODIGO_CEST,'.','')																				"CEST",	  --#42#	
+				NFE_ITENS.SUB_ITEM_SPED																								"cBenef", --#86# 
 					CASE WHEN (NFE_ITENS.ISS + NFE_ITENS.ISS_R > 0 )
 						OR (SUBSTRING(REPLACE(NFE_ITENS.CLASSIF_FISCAL,'.',''),9,3) = '') OR LEN(SUBSTRING(REPLACE(NFE_ITENS.CLASSIF_FISCAL,'.',''),9,3)) <= 1 THEN NULL ELSE
 						SUBSTRING(REPLACE(NFE_ITENS.CLASSIF_FISCAL,'.',''),9,3) END													"EXTIPI",		-- 1-0 TIRAR A TAG CASO SEJA NF DE SERVICO		
@@ -1179,7 +989,7 @@ SELECT  'SUBSTITUIR' "@SUBSTITUI1",
 								DBO.FX_REPLACE_CARACTER_ESPECIAL_NFE(DEFAULT,W_DI_NFE.CODIGO_EXPORTADOR) 	"cExportador",
 								--- ADI
 								(
-									SELECT /*#122#*/CASE WHEN RTRIM(ISNULL(W_DI_NFE.TIPO_DOC_IMPORTACAO,''))<> '2 - Declaração Única de Importação - DUIMP' THEN W_ADICAO_DI_NFE.NUMERO_DA_ADICAO ELSE NULL END		"nAdicao" /*#122#*/,
+									SELECT W_ADICAO_DI_NFE.NUMERO_DA_ADICAO									"nAdicao",
 											W_ADICAO_DI_NFE.ID_ITEM											"nSeqAdic",
 											DBO.FX_REPLACE_CARACTER_ESPECIAL_NFE(DEFAULT,W_ADICAO_DI_NFE.FABRICANTE_ESTRANGEIRO)  "cFabricante",
 											CASE WHEN W_ADICAO_DI_NFE.DESCONTO_ITEM = 0 OR W_ADICAO_DI_NFE.DESCONTO_ITEM IS NULL THEN NULL ELSE CONVERT(NUMERIC(15,2),W_ADICAO_DI_NFE.DESCONTO_ITEM) END "vDescDI",
@@ -1195,7 +1005,7 @@ SELECT  'SUBSTITUIR' "@SUBSTITUI1",
 									FOR XML PATH('adi'), TYPE				
 								)  			
                         FROM ( SELECT DISTINCT NUMERO_DI, DATA_REGISTRO_DI, LOCAL_DESEMBARACO, UF_DESEMBARACO, DATA_DESEMBARACO, CODIGO_EXPORTADOR, 
-											   TIPO_TRANSPORTE, VALOR_AFRMM, TIPO_INTERMEDIO, CGC_ENCOMENDANTE_ADQUIRENTE, UF_ENCOMENDANTE_ADQUIRENTE/*#122#*/,TIPO_DOC_IMPORTACAO/*#122#*/
+											   TIPO_TRANSPORTE, VALOR_AFRMM, TIPO_INTERMEDIO, CGC_ENCOMENDANTE_ADQUIRENTE, UF_ENCOMENDANTE_ADQUIRENTE
                                        FROM W_DI_NFE
                                        WHERE W_DI_NFE.ITEM_IMPRESSAO = NFE_ITENS.ITEM_IMPRESSAO
                                        AND         W_DI_NFE.SUB_ITEM_TAMANHO = NFE_ITENS.SUB_ITEM_TAMANHO
@@ -1343,17 +1153,12 @@ SELECT  'SUBSTITUIR' "@SUBSTITUI1",
 								--#61#	
 								--#3.10# 
 								--#26#
-								--#99#-#100#-Início
-							(  SELECT Case 
-								When NFE_ITENS.ICMS_ZF > 0 THEN CONVERT(NUMERIC(15,2), NFE_ITENS.ICMS_ZF)   
-								when NFE_ITENS.ICMS_DESONERADO > 0 THEN CONVERT(NUMERIC(15,2), NFE_ITENS.ICMS_DESONERADO) 
-								else 0.00 end as "vICMSDeson",
-								Case when NFE_ITENS.ICMS_ZF > 0 OR NFE_ITENS.ICMS_DESONERADO > 0 THEN RTRIM(NFE_ITENS.ST_MOT_DESONERACAO) ELSE ' ' end as "motDesICMS"
-                                WHERE (NFE_ITENS.ICMS_ZF > 0 OR NFE_ITENS.ICMS_DESONERADO > 0)
-                                FOR XML PATH(''), TYPE 
-							)								
-								--#99#-#100#-Fim
-
+								( SELECT
+									CONVERT(NUMERIC(15,2),NFE_ITENS.ICMS_ZF)	"vICMSDeson",  --#3.10# "vICMS", --(2.0) ICMS ZF para tratamento de qq desoneração
+									RTRIM(NFE_ITENS.ST_MOT_DESONERACAO) 		"motDesICMS"  --(2.0) Motivos conforme nota técnica
+								  WHERE	 NFE_ITENS.ICMS_ZF > 0 
+								  FOR XML PATH(''), TYPE
+								)
 								--CONVERT(NUMERIC(15,2),NFE_ITENS.ICMS_ZF)	"vICMSDeson",
 								--RTRIM(NFE_ITENS.ST_MOT_DESONERACAO) 		"motDesICMS"  
 								--#26#
@@ -1385,25 +1190,21 @@ SELECT  'SUBSTITUIR' "@SUBSTITUI1",
 														
 								--#3.10# 
 								--#26#
-								--#99#-#100#-Início
-								(SELECT Case When NFE_ITENS.ICMS_ZF > 0 THEN CONVERT(NUMERIC(15,2),NFE_ITENS.ICMS_ZF)   
-								when NFE_ITENS.ICMS_DESONERADO > 0 THEN CONVERT(NUMERIC(15,2),NFE_ITENS.ICMS_DESONERADO) ELSE 0.00 end  "vICMSDeson",
-								Case when NFE_ITENS.ICMS_ZF > 0 OR NFE_ITENS.ICMS_DESONERADO > 0 THEN RTRIM(NFE_ITENS.ST_MOT_DESONERACAO)  ELSE ' ' END    "motDesICMS"
-                                WHERE (NFE_ITENS.ICMS_ZF > 0 OR NFE_ITENS.ICMS_DESONERADO > 0)
-                                FOR XML PATH(''), TYPE)								
-								--#99#-#100#-Fim
-
+								( SELECT
+									CONVERT(NUMERIC(15,2),NFE_ITENS.ICMS_ZF)	"vICMSDeson",  --#3.10# "vICMS", --(2.0) ICMS ZF para tratamento de qq desoneração
+									RTRIM(NFE_ITENS.ST_MOT_DESONERACAO) 		"motDesICMS"  --(2.0) Motivos conforme nota técnica
+								  WHERE	 NFE_ITENS.ICMS_ZF > 0 
+								  FOR XML PATH(''), TYPE
+								)
 								--CONVERT(NUMERIC(15,2),NFE_ITENS.ICMS_ZF)	"vICMSDeson",
 								--RTRIM(NFE_ITENS.ST_MOT_DESONERACAO) 		"motDesICMS"  
 								--#26#
-								
 								--#3.10# 
-							--#99#-Início	
---							WHERE (NFE_ITENS.ICMS_ST + NFE_ITENS.ICMS_STR) >= 0 AND NFE_ITENS.PMVAST IS NOT NULL
-							WHERE (NFE_ITENS.ICMS_ST + NFE_ITENS.ICMS_STR + NFE_ITENS.ICMS_ZF + NFE_ITENS.ICMS_DESONERADO) >= 0 
-							--#99#-Fim
+							WHERE (NFE_ITENS.ICMS_ST + NFE_ITENS.ICMS_STR) >= 0 AND NFE_ITENS.PMVAST IS NOT NULL
 							FOR XML PATH(''), TYPE
 						)
+
+
 						WHERE NFE_ITENS.TRIBUT_ICMS = '30'
 						FOR XML PATH(''), TYPE				
 					) AS ICMS30,
@@ -1412,15 +1213,13 @@ SELECT  'SUBSTITUIR' "@SUBSTITUI1",
 					( 
 						SELECT 	RTRIM(NFE_ITENS.TRIBUT_ORIGEM)					"orig",
 								RTRIM(NFE_ITENS.TRIBUT_ICMS)					"CST",	
-								--#99#-Início
-								(SELECT
-								Case When NFE_ITENS.ICMS_ZF > 0 THEN CONVERT(NUMERIC(15,2),NFE_ITENS.ICMS_ZF)  when NFE_ITENS.ICMS_DESONERADO > 0 THEN CONVERT(NUMERIC(15,2),NFE_ITENS.ICMS_DESONERADO) ELSE 0.00 END  "vICMSDeson",
-
-								Case when (NFE_ITENS.ICMS_ZF > 0 OR NFE_ITENS.ICMS_DESONERADO > 0) THEN RTRIM(NFE_ITENS.ST_MOT_DESONERACAO) ELSE ' ' END 		"motDesICMS" 
-								WHERE NFE_ITENS.ICMS_ZF > 0 OR NFE_ITENS.ICMS_DESONERADO > 0
-								FOR XML PATH(''), TYPE
+								( SELECT
+									CONVERT(NUMERIC(15,2),NFE_ITENS.ICMS_ZF)	"vICMSDeson",  --#3.10# "vICMS", --(2.0) ICMS ZF para tratamento de qq desoneração
+									RTRIM(NFE_ITENS.ST_MOT_DESONERACAO) 		"motDesICMS"  --(2.0) Motivos conforme nota técnica
+								  WHERE NFE_ITENS.ICMS_ZF > 0 
+								  FOR XML PATH(''), TYPE
 								)
-								--#99#-Fim
+
 						WHERE NFE_ITENS.TRIBUT_ICMS IN ('40','41','50')
 						FOR XML PATH(''), TYPE				
 					) AS ICMS40,
@@ -1442,25 +1241,16 @@ SELECT  'SUBSTITUIR' "@SUBSTITUI1",
 								CONVERT(NUMERIC(15,2),NFE_ITENS.ICMS_BASE)																									"vBC",
 								CONVERT(NUMERIC(7,4),NFE_ITENS.ICMS_ALIQUOTA)																								"pICMS", --#13#					
 								--#3.1# #21#
-								CONVERT(NUMERIC(15,2),NFE_ITENS.ICMS)   														"vICMSOp",
-								--#102#-#103#-#105#-#108#Início
-								CONVERT(NUMERIC(5,2),((case when ISNULL(NFE_ITENS.ICMS,0) = 0 THEN 0 ELSE(NFE_ITENS.ICMS_BST/NFE_ITENS.ICMS )END)*100)) "pDif",
-								CONVERT(NUMERIC(15,2),NFE_ITENS.ICMS_BST) 															"vICMSDif", 
-								--#102#-Fim
-								CONVERT(NUMERIC(15,2),NFE_ITENS.ICMS-NFE_ITENS.ICMS_BST) 												"vICMS",
-								--#103#-#105#-#108#-Fim
+								CONVERT(NUMERIC(15,2),NFE_ITENS.ICMS)																										"vICMSOp",
+								CONVERT(NUMERIC(5,2),((1-(NFE_ITENS.ICMS_BST_ALIQUOTA/CASE WHEN NFE_ITENS.ICMS_ALIQUOTA = 0 THEN 1 ELSE NFE_ITENS.ICMS_ALIQUOTA END))*100)) "pDif",
+								CONVERT(NUMERIC(15,2),NFE_ITENS.ICMS-NFE_ITENS.ICMS_BST)																					"vICMSDif", 
+								--#3.1# #21#
+								CONVERT(NUMERIC(15,2),NFE_ITENS.ICMS_BST)																									"vICMS",
 								--#61#	
 								CASE WHEN NFE_ITENS.FECP_BASE	  > 0 THEN CONVERT(NUMERIC(15,2),NFE_ITENS.FECP_BASE)	 ELSE NULL END										"vBCFCP",
 								CASE WHEN NFE_ITENS.FECP_ALIQUOTA > 0 THEN CONVERT(NUMERIC(7,4),NFE_ITENS.FECP_ALIQUOTA) ELSE NULL END										"pFCP",
-								CASE WHEN (NFE_ITENS.FECP_VALOR >= 0 AND NFE_ITENS.FECP_BASE > 0) THEN CONVERT(NUMERIC(15,2),NFE_ITENS.FECP_VALOR)   ELSE NULL END			"vFCP", --#81#
+								CASE WHEN (NFE_ITENS.FECP_VALOR >= 0 AND NFE_ITENS.FECP_BASE > 0) THEN CONVERT(NUMERIC(15,2),NFE_ITENS.FECP_VALOR)   ELSE NULL END			"vFCP" --#81#
 								--#61#	
-								--#132#  inicio
-								CASE WHEN NFE_ITENS.FECP_DIF_VALOR > 0  THEN CONVERT(NUMERIC(5,2),((case when ISNULL(NFE_ITENS.FECP_VALOR,0) = 0 THEN 0 ELSE(NFE_ITENS.FECP_DIF_VALOR/NFE_ITENS.FECP_VALOR )END)*100)) END "pFCPDif",
-								CASE WHEN NFE_ITENS.FECP_DIF_VALOR  > 0 THEN CONVERT(NUMERIC(15,2),NFE_ITENS.FECP_DIF_VALOR)	 ELSE NULL END										"vFCPDif",
-								CASE WHEN (NFE_ITENS.FECP_DIF_VALOR >= 0 AND NFE_ITENS.FECP_DIF_BASE > 0) THEN (CONVERT(NUMERIC(15,2),NFE_ITENS.FECP_VALOR) - CONVERT(NUMERIC(15,2),NFE_ITENS.FECP_DIF_VALOR))   ELSE NULL END		"vFCPEfet" 
-							    --#132#  fim						
-								
-								--#99#-
 							WHERE NFE_ITENS.ICMS_BST > 0
 							FOR XML PATH(''), TYPE				
 						)
@@ -1519,15 +1309,15 @@ SELECT  'SUBSTITUIR' "@SUBSTITUI1",
 						(							
 						--#71# - NF 1.60							
 							SELECT							
-								case when @OPTANTE_ROT = 0 then CONVERT(NUMERIC(7,4),NFE_ITENS.pRedBCEfet) else 0 end			"pRedBCEfet", --#73# /*#123#*/
-								case when @OPTANTE_ROT = 0 then NFE_ITENS.ICMS_EFET_BASE  else 0 end							"vBCEfet",	  --#73# /*#123#*/
-								case when @OPTANTE_ROT = 0 then CONVERT(NUMERIC(7,4),NFE_ITENS.ICMS_EFET_ALIQUOTA)  else 0 end	"pICMSEfet",  --#73# /*#123#*/
-								case when @OPTANTE_ROT = 0 then NFE_ITENS.ICMS_EFET_VALOR  else 0 end							"vICMSEfet"	  --#73# /*#123#*/
+								CONVERT(NUMERIC(7,4),NFE_ITENS.pRedBCEfet)			"pRedBCEfet", --#73#
+								NFE_ITENS.ICMS_EFET_BASE							"vBCEfet",	  --#73#
+								CONVERT(NUMERIC(7,4),NFE_ITENS.ICMS_EFET_ALIQUOTA)	"pICMSEfet",  --#73#
+								NFE_ITENS.ICMS_EFET_VALOR							"vICMSEfet"	  --#73#		
 								--CASE WHEN NFE_ITENS.pRedBCEfet			> 0 THEN CONVERT(NUMERIC(15,2),NFE_ITENS.pRedBCEfet)			ELSE NULL	END		"pRedBCEfet",	--#73#
 								--CASE WHEN NFE_ITENS.ICMS_EFET_BASE		> 0 THEN CONVERT(NUMERIC(15,2),NFE_ITENS.ICMS_EFET_BASE)		ELSE NULL	END		"vBCEfet",		--#73#		
 								--CASE WHEN NFE_ITENS.ICMS_EFET_ALIQUOTA	> 0 THEN CONVERT(NUMERIC(7,4),NFE_ITENS.ICMS_EFET_ALIQUOTA)		ELSE NULL	END		"pICMSEfet",	--#73#	
 								--CASE WHEN NFE_ITENS.ICMS_EFET_VALOR		> 0 THEN CONVERT(NUMERIC(15,2),NFE_ITENS.ICMS_EFET_VALOR)		ELSE NULL	END		"vICMSEfet"		--#73#					
-							WHERE ((NFE_ITENS.ICMS_EFET_VALOR) > 0 )  OR ((NFE_ITENS.ICMS_EFET_VALOR) = 0 AND  @OPTANTE_ROT=1 ) /*#123#*/
+							WHERE NFE_ITENS.ICMS_EFET_VALOR > 0
 							FOR XML PATH(''), TYPE
 						--#71# - NF 1.60	
 						)
@@ -1560,8 +1350,6 @@ SELECT  'SUBSTITUIR' "@SUBSTITUI1",
 								CASE WHEN NFE_ITENS.FECP_ALIQUOTA > 0 THEN CONVERT(NUMERIC(7,4),NFE_ITENS.FECP_ALIQUOTA) ELSE NULL END								"pFCP",
 								CASE WHEN (NFE_ITENS.FECP_VALOR >= 0 AND NFE_ITENS.FECP_BASE > 0) THEN CONVERT(NUMERIC(15,2),NFE_ITENS.FECP_VALOR)   ELSE NULL END	"vFCP", --#81#
 								--#61#	
-								--#99#-#100#-#101#
-
 						(	SELECT
 								4																		"modBCST",							
 								CASE WHEN NFE_ITENS.PMVAST > 0  
@@ -1575,21 +1363,23 @@ SELECT  'SUBSTITUIR' "@SUBSTITUI1",
 								--#61#	
 								CASE WHEN NFE_ITENS.FECP_ST_BASE	 > 0 THEN CONVERT(NUMERIC(15,2),NFE_ITENS.FECP_ST_BASE)		ELSE NULL END  "vBCFCPST",
 								CASE WHEN NFE_ITENS.FECP_ST_ALIQUOTA > 0 THEN CONVERT(NUMERIC(7,4),NFE_ITENS.FECP_ST_ALIQUOTA)	ELSE NULL END  "pFCPST",
-								CASE WHEN NFE_ITENS.FECP_ST_VALOR    > 0 THEN CONVERT(NUMERIC(15,2),NFE_ITENS.FECP_ST_VALOR)	ELSE NULL END  "vFCPST"								
+								CASE WHEN NFE_ITENS.FECP_ST_VALOR    > 0 THEN CONVERT(NUMERIC(15,2),NFE_ITENS.FECP_ST_VALOR)	ELSE NULL END  "vFCPST",								
 								--#61#
 								--#3.1#
 								--#26#
+								( SELECT
+									CONVERT(NUMERIC(15,2),NFE_ITENS.ICMS_ZF)	"vICMSDeson",  --#3.10# "vICMS", --(2.0) ICMS ZF para tratamento de qq desoneração
+									RTRIM(NFE_ITENS.ST_MOT_DESONERACAO) 		"motDesICMS"  --(2.0) Motivos conforme nota técnica
+								  WHERE NFE_ITENS.ICMS_ZF > 0 
+								  FOR XML PATH(''), TYPE
+								)
 								--#26#
-							WHERE (NFE_ITENS.ICMS_ST + NFE_ITENS.ICMS_STR ) >= 0 AND NFE_ITENS.PMVAST IS NOT NULL --#3.1#
+								--#3.1#
+
+							WHERE (NFE_ITENS.ICMS_ST + NFE_ITENS.ICMS_STR) >= 0 AND NFE_ITENS.PMVAST IS NOT NULL
 							FOR XML PATH(''), TYPE
-						),
-						--#99#-#100#-#101#-Início
-						( SELECT Case When NFE_ITENS.ICMS_DESONERADO > 0 THEN CONVERT(NUMERIC   (15,2),NFE_ITENS.ICMS_DESONERADO) ELSE NULL end "vICMSDeson",
-								Case when NFE_ITENS.ICMS_DESONERADO > 0 THEN RTRIM(NFE_ITENS.ST_MOT_DESONERACAO) ELSE NULL END 	"motDesICMS" 
-						WHERE NFE_ITENS.ICMS_DESONERADO > 0 
-						FOR XML PATH(''), TYPE
 						)
-						--#99#-#100#-#101#-Fim
+
 						WHERE NFE_ITENS.TRIBUT_ICMS = '70'
 						FOR XML PATH(''), TYPE				
 					) AS ICMS70,
@@ -1610,12 +1400,21 @@ SELECT  'SUBSTITUIR' "@SUBSTITUI1",
 								--#61#	
 								CASE WHEN NFE_ITENS.FECP_BASE	  > 0 THEN CONVERT(NUMERIC(15,2),NFE_ITENS.FECP_BASE)	 ELSE NULL END								"vBCFCP",
 								CASE WHEN NFE_ITENS.FECP_ALIQUOTA > 0 THEN CONVERT(NUMERIC(7,4),NFE_ITENS.FECP_ALIQUOTA) ELSE NULL END								"pFCP",
-								CASE WHEN (NFE_ITENS.FECP_VALOR >= 0 AND NFE_ITENS.FECP_BASE > 0) THEN CONVERT(NUMERIC(15,2),NFE_ITENS.FECP_VALOR)   ELSE NULL END	"vFCP" --#81#
-								--#114# #26# #3.1# #22# #61# Bloco movido após select "modBCST" 4																															 
+								CASE WHEN (NFE_ITENS.FECP_VALOR >= 0 AND NFE_ITENS.FECP_BASE > 0) THEN CONVERT(NUMERIC(15,2),NFE_ITENS.FECP_VALOR)   ELSE NULL END	"vFCP", --#81#
+								--#61#	
+								--#3.1# #22#
+								--#26#
+								( SELECT
+									CONVERT(NUMERIC(15,2),NFE_ITENS.ICMS_ZF)	"vICMSDeson",  --#3.10# "vICMS", --(2.0) ICMS ZF para tratamento de qq desoneração
+									RTRIM(NFE_ITENS.ST_MOT_DESONERACAO) 		"motDesICMS"  --(2.0) Motivos conforme nota técnica
+								  WHERE NFE_ITENS.ICMS_ZF > 0 
+								  FOR XML PATH(''), TYPE
+								)
+								--#26#
+								--#3.1# #22#
 								WHERE NFE_ITENS.ICMS > 0
 								FOR XML PATH(''), TYPE
-							    ),						
-								--#99#-#100#-#101#-Fim
+							),						
 							( SELECT
 									4																				"modBCST",
 									CASE WHEN NFE_ITENS.PMVAST > 0  
@@ -1629,18 +1428,6 @@ SELECT  'SUBSTITUIR' "@SUBSTITUI1",
 								FOR XML PATH(''), TYPE
 
 							),
-								--#114# #26# #3.1# #22# #61#
-								( SELECT CASE	WHEN NFE_ITENS.ICMS_ZF			> 0 THEN CONVERT(NUMERIC(15,2),NFE_ITENS.ICMS_ZF)   
-												WHEN NFE_ITENS.ICMS_DESONERADO	> 0 THEN CONVERT(NUMERIC(15,2),NFE_ITENS.ICMS_DESONERADO)
-											ELSE 0.00 
-											END									"vICMSDeson",  --#111##3.10# "vICMS", --(2.0) ICMS ZF para tratamento de qq desoneração
-									RTRIM(NFE_ITENS.ST_MOT_DESONERACAO) 		"motDesICMS"  --(2.0) Motivos conforme nota técnica
-									WHERE NFE_ITENS.ICMS_ZF > 0 
-										OR NFE_ITENS.ICMS_DESONERADO > 0 --#111#
-									FOR XML PATH(''), TYPE
-								),
-								--#114##26# #3.1# #22# #61#
-
 								--#61#	
 								CASE WHEN NFE_ITENS.FECP_ST_BASE	 > 0 THEN CONVERT(NUMERIC(15,2),NFE_ITENS.FECP_ST_BASE)		ELSE NULL END  "vBCFCPST",
 								CASE WHEN NFE_ITENS.FECP_ST_ALIQUOTA > 0 THEN CONVERT(NUMERIC(7,4),NFE_ITENS.FECP_ST_ALIQUOTA)	ELSE NULL END  "pFCPST",
@@ -1841,17 +1628,15 @@ SELECT  'SUBSTITUIR' "@SUBSTITUI1",
 						(		
 						--#71# - NF 1.60					
 							SELECT																			
-								case when @OPTANTE_ROT = 0 then CONVERT(NUMERIC(7,4),NFE_ITENS.pRedBCEfet) else 0 end			"pRedBCEfet", --#73# /*#123#*/
-								case when @OPTANTE_ROT = 0 then NFE_ITENS.ICMS_EFET_BASE else 0 end					    		"vBCEfet",	  --#73# /*#123#*/
-								case when @OPTANTE_ROT = 0 then CONVERT(NUMERIC(7,4),NFE_ITENS.ICMS_EFET_ALIQUOTA)  else 0 end	"pICMSEfet",  --#73# /*#123#*/
-								case when @OPTANTE_ROT = 0 then NFE_ITENS.ICMS_EFET_VALOR  else 0 end							"vICMSEfet"	  --#73# /*#123#*/
-
+								CONVERT(NUMERIC(7,4),NFE_ITENS.pRedBCEfet)			"pRedBCEfet", --#73#
+								NFE_ITENS.ICMS_EFET_BASE							"vBCEfet",	  --#73#
+								CONVERT(NUMERIC(7,4),NFE_ITENS.ICMS_EFET_ALIQUOTA)	"pICMSEfet",  --#73#
+								NFE_ITENS.ICMS_EFET_VALOR							"vICMSEfet"	  --#73#		
 								--CASE WHEN NFE_ITENS.pRedBCEfet			> 0 THEN CONVERT(NUMERIC(15,2),NFE_ITENS.pRedBCEfet)			ELSE NULL	END		"pRedBCEfet",	--#73#
 								--CASE WHEN NFE_ITENS.ICMS_EFET_BASE		> 0 THEN CONVERT(NUMERIC(15,2),NFE_ITENS.ICMS_EFET_BASE)		ELSE NULL	END		"vBCEfet",		--#73#		
 								--CASE WHEN NFE_ITENS.ICMS_EFET_ALIQUOTA	> 0 THEN CONVERT(NUMERIC(7,4),NFE_ITENS.ICMS_EFET_ALIQUOTA)		ELSE NULL	END		"pICMSEfet",	--#73#	
 								--CASE WHEN NFE_ITENS.ICMS_EFET_VALOR		> 0 THEN CONVERT(NUMERIC(15,2),NFE_ITENS.ICMS_EFET_VALOR)		ELSE NULL	END		"vICMSEfet"		--#73#					
-							WHERE ((NFE_ITENS.ICMS_EFET_VALOR) > 0 )  OR ((NFE_ITENS.ICMS_EFET_VALOR) = 0 AND  @OPTANTE_ROT=1 ) /*#123#*/
-
+							WHERE (NFE_ITENS.ICMS_EFET_VALOR) > 0 
 							
 							FOR XML PATH(''), TYPE
 						--#71# - NF 1.60	
@@ -2084,6 +1869,7 @@ SELECT  'SUBSTITUIR' "@SUBSTITUI1",
 
 				--- PIS   
 				( SELECT	
+	
 					--- PISALIQ
 					( 
 						SELECT	RTRIM(NFE_ITENS.CST_PIS)						"CST",			
@@ -2265,7 +2051,7 @@ SELECT  'SUBSTITUIR' "@SUBSTITUI1",
 													(       SELECT   pDevol AS "pDevol" 
 															FROM 
 															( --SELECT       CONVERT(NUMERIC(3,2),(B.QTDE_DEVOLVIDA/C.QTDE_ITEM))*100 AS "pDevol" --#62# --#88#
-															SELECT       CONVERT(NUMERIC(5,2),(SUM(B.QTDE_DEVOLVIDA)/SUM(C.QTDE_ITEM)))*100 AS "pDevol" --#90#
+															SELECT       CONVERT(NUMERIC(3,2),(SUM(B.QTDE_DEVOLVIDA)/SUM(C.QTDE_ITEM)))*100 AS "pDevol" --#90#
 															FROM   W_IMPRESSAO_NFE_ITENS  AS A
 																	JOIN FATURAMENTO_ENTRADA_DEVOLUCAO AS B
 																			ON     A.NF=B.NF_SAIDA
@@ -2279,38 +2065,26 @@ SELECT  'SUBSTITUIR' "@SUBSTITUI1",
 																			AND    C.NOME_CLIFOR=B.NOME_CLIFOR
 																			AND    C.ITEM_IMPRESSAO=B.ITEM_IMPRESSAO_ENTRADA
 																			AND    C.SUB_ITEM_TAMANHO=B.SUB_ITEM_ENTRADA
-															WHERE  A.NOME_CLIFOR = NFE_ITENS.NOME_CLIFOR
+
+															WHERE A.NOME_CLIFOR = NFE_ITENS.NOME_CLIFOR
 															AND    A.ITEM_IMPRESSAO = NFE_ITENS.ITEM_IMPRESSAO
 															AND    A.SUB_ITEM_TAMANHO = NFE_ITENS.SUB_ITEM_TAMANHO
 															AND    A.NF = NFE_ITENS.NF
 															AND    A.SERIE_NF =NFE_ITENS.SERIE_NF
 															--and  IPI > 0 /*#27#*/
-															UNION
-															SELECT CONVERT(NUMERIC(5,2),(SUM(B.QTDE_DEVOLVIDA)/SUM(B.QTDE_ITEM))*100) AS "pDevol" --#70#
+															UNION 
+															SELECT CONVERT(NUMERIC(3,2),(SUM(B.QTDE_DEVOLVIDA)/SUM(B.QTDE_ITEM)))*100 AS "pDevol" --#70#
 															FROM   W_IMPRESSAO_NFE_ITENS  AS A
 																/*#39#*/
-															JOIN	(	SELECT	--#118#
-																				CASE WHEN Isnull(FT.CODIGO_CLIENTE_VAREJO, '') = '' THEN FED.NOME_CLIFOR
-																					ELSE CV.CLIENTE_VAREJO 
-																					END AS NOME_CLIFOR 
-																				--#118#
-																				,FED.NF_ENTRADA , FED.SERIE_NF_ENTRADA , FED.ITEM_IMPRESSAO_ENTRADA , FED.SUB_ITEM_ENTRADA,SUM(FED.QTDE_DEVOLVIDA) AS QTDE_DEVOLVIDA ,SUM(FI.QTDE_ITEM) AS QTDE_ITEM 
-																		FROM	FATURAMENTO_ENTRADA_DEVOLUCAO AS FED
-																			JOIN FATURAMENTO_ITEM AS FI
-																				ON	FED.FILIAL = FI.FILIAL 
-																				AND	FED.NF_SAIDA = FI.NF_SAIDA 
-																				AND	FED.SERIE_NF= FI.SERIE_NF 
-																				AND	FED.SUB_ITEM_SAIDA = FI.SUB_ITEM_TAMANHO 
-																				AND	FED.ITEM_IMPRESSAO_SAIDA = FI.ITEM_IMPRESSAO 
-																			--#118#
-																			JOIN FATURAMENTO AS FT
-																				ON	FT.NF_SAIDA = FI.NF_SAIDA 
-																				AND FT.SERIE_NF = FI.SERIE_NF 
-																				AND FT.FILIAL  = FI.FILIAL 
-																			LEFT JOIN CLIENTES_VAREJO CV
-																				ON CV.CODIGO_CLIENTE = FT.CODIGO_CLIENTE_VAREJO
-																			--#118#
-																		GROUP BY FED.NOME_CLIFOR ,FED.NF_ENTRADA , FED.SERIE_NF_ENTRADA , FED.ITEM_IMPRESSAO_ENTRADA , FED.SUB_ITEM_ENTRADA,CV.CLIENTE_VAREJO,FT.CODIGO_CLIENTE_VAREJO ) AS B
+																JOIN	(	SELECT	FED.NOME_CLIFOR ,FED.NF_ENTRADA , FED.SERIE_NF_ENTRADA , FED.ITEM_IMPRESSAO_ENTRADA , FED.SUB_ITEM_ENTRADA,SUM(FED.QTDE_DEVOLVIDA) AS QTDE_DEVOLVIDA ,SUM(FI.QTDE_ITEM) AS QTDE_ITEM 
+																			FROM	FATURAMENTO_ENTRADA_DEVOLUCAO AS FED
+																				JOIN FATURAMENTO_ITEM AS FI
+																					ON	FED.FILIAL = FI.FILIAL 
+																					AND	FED.NF_SAIDA = FI.NF_SAIDA 
+																					AND	FED.SERIE_NF= FI.SERIE_NF 
+																					AND	FED.SUB_ITEM_SAIDA = FI.SUB_ITEM_TAMANHO 
+																					AND	FED.ITEM_IMPRESSAO_SAIDA = FI.ITEM_IMPRESSAO 
+																			GROUP BY FED.NOME_CLIFOR ,FED.NF_ENTRADA , FED.SERIE_NF_ENTRADA , FED.ITEM_IMPRESSAO_ENTRADA , FED.SUB_ITEM_ENTRADA) AS B
 																/*#39#*/
 																ON     A.NF=B.NF_ENTRADA
 																AND    A.SERIE_NF=B.SERIE_NF_ENTRADA
@@ -2339,14 +2113,6 @@ SELECT  'SUBSTITUIR' "@SUBSTITUI1",
 															AND		FILIAL = NFE_ITENS.FILIAL
 															--#88#
 															UNION
-															--#110#-Início
-															SELECT top 1 0.00 AS "pDevol"
-															FROM	FATURAMENTO_ITEM_RELACIONADO
-															WHERE	NF_SAIDA = NFE_ITENS.NF
-															AND		SERIE_NF = NFE_ITENS.SERIE_NF
-															AND		FILIAL = NFE_ITENS.FILIAL
-															--#110#-Fim
-															UNION
 															--#93#
 															SELECT	100.00 AS "pDevol"
 															FROM	ENTRADAS_ITEM
@@ -2363,46 +2129,20 @@ SELECT  'SUBSTITUIR' "@SUBSTITUI1",
 															AND		ENTRADAS_ITEM.SUB_ITEM_TAMANHO =NFE_ITENS.SUB_ITEM_TAMANHO
 															AND		FATURAMENTO_ENTRADA_DEVOLUCAO.NF_ENTRADA IS NULL 
 															AND		NFE_ITENS.CODIGO_FISCAL_OPERACAO IN ('1201','1202','1410','1411','5921','6921')
-															--#107#
-															AND     NOT EXISTS (	SELECT	top 1 *
-																					FROM	ENTRADAS_NF_AVULSA_REFERENCIADA
-																					WHERE	NF_ENTRADA=NFE_ITENS.NF
-																					AND		SERIE_NF_ENTRADA = NFE_ITENS.SERIE_NF
-																					AND		NOME_CLIFOR = NFE_ITENS.NOME_CLIFOR)
-															--#107#
 															--#93#
 															UNION
 															--#29#
 															--LOJA
 															--#82# Implementado o SUM
-															SELECT CONVERT(NUMERIC(5,2), (SUM(A.QTDE_ITEM)/SUM(H.QTDE_ITEM))) * 100 AS "pDevol"
+															SELECT CONVERT(NUMERIC(3,2), (SUM(A.QTDE_ITEM)/SUM(H.QTDE_ITEM))) * 100 AS "pDevol"
 															FROM W_IMPRESSAO_NFE_ITENS A
-																INNER JOIN FILIAIS B 
-																ON A.FILIAL = B.FILIAL
-																INNER join LOJAS_VAREJO LV -- #95#
-																on B.FILIAL = LV.FILIAL 
-																INNER JOIN LOJA_VENDA_PGTO C 
-																ON A.NF = C.NUMERO_FISCAL_TROCA 
-																AND A.SERIE_NF = C.SERIE_NF_ENTRADA 
-																AND LV.CODIGO_FILIAL = C.CODIGO_FILIAL --#95#
-																INNER JOIN LOJA_VENDA D ON C.LANCAMENTO_CAIXA = D.LANCAMENTO_CAIXA 
-																AND C.CODIGO_FILIAL = D.CODIGO_FILIAL
-																CROSS APPLY (SELECT DISTINCT TRO.CODIGO_FILIAL, TRO.TICKET, 
-																TRO.CODIGO_FILIAL_ORIGEM, TRO.TICKET_ORIGEM,  TRO.DATA_VENDA_ORIGEM --#94#  
-																			 FROM LOJA_VENDA_TROCA_ORIGEM TRO 
-																			 WHERE
-																			 TRO.CODIGO_FILIAL = D.CODIGO_FILIAL 
-																			 AND TRO.TICKET = D.TICKET 
-																			 AND  TRO.DATA_VENDA = D.DATA_VENDA ) E --#84# #94#
-																INNER JOIN LOJA_VENDA F ON E.TICKET_ORIGEM = F.TICKET 
-																AND E.CODIGO_FILIAL_ORIGEM = F.CODIGO_FILIAL  
-																AND F.DATA_VENDA = E.DATA_VENDA_ORIGEM --#94#
-																INNER JOIN LOJA_VENDA_PGTO G ON F.LANCAMENTO_CAIXA = G.LANCAMENTO_CAIXA 
-																AND F.CODIGO_FILIAL = G.CODIGO_FILIAL
-																INNER JOIN LOJA_NOTA_FISCAL_ITEM H ON G.NUMERO_FISCAL_VENDA = H.NF_NUMERO 
-																AND G.SERIE_NF_SAIDA = H.SERIE_NF 
-																AND G.CODIGO_FILIAL = H.CODIGO_FILIAL
-																AND A.CODIGO_ITEM = H.CODIGO_ITEM -- #84# 
+																INNER JOIN FILIAIS B ON A.FILIAL = B.FILIAL
+																INNER JOIN LOJA_VENDA_PGTO C ON A.NF = C.NUMERO_FISCAL_TROCA AND A.serie_nf = C.SERIE_NF_ENTRADA AND B.COD_FILIAL = C.CODIGO_FILIAL
+																INNER JOIN LOJA_VENDA D ON C.LANCAMENTO_CAIXA = D.LANCAMENTO_CAIXA AND C.CODIGO_FILIAL = D.CODIGO_FILIAL
+																CROSS APPLY (SELECT DISTINCT TRO.CODIGO_FILIAL, TRO.TICKET, TRO.CODIGO_FILIAL_ORIGEM, TRO.TICKET_ORIGEM  FROM LOJA_VENDA_TROCA_ORIGEM TRO WHERE TRO.CODIGO_FILIAL = D.CODIGO_FILIAL AND TRO.TICKET = D.TICKET ) E --#84#
+																INNER JOIN LOJA_VENDA F ON E.TICKET_ORIGEM = F.TICKET AND E.CODIGO_FILIAL_ORIGEM = F.CODIGO_FILIAL
+																INNER JOIN LOJA_VENDA_PGTO G ON F.LANCAMENTO_CAIXA = G.LANCAMENTO_CAIXA AND F.CODIGO_FILIAL = G.CODIGO_FILIAL
+																INNER JOIN LOJA_NOTA_FISCAL_ITEM H ON G.NUMERO_FISCAL_VENDA = H.NF_NUMERO AND G.SERIE_NF_SAIDA = H.SERIE_NF AND G.CODIGO_FILIAL = H.CODIGO_FILIAL AND A.CODIGO_ITEM = H.CODIGO_ITEM -- #84# 
 																WHERE      A.NOME_CLIFOR = NFE_ITENS.NOME_CLIFOR
 																	AND    A.ITEM_IMPRESSAO = NFE_ITENS.ITEM_IMPRESSAO
 																	AND    A.SUB_ITEM_TAMANHO = NFE_ITENS.SUB_ITEM_TAMANHO
@@ -2417,12 +2157,11 @@ SELECT  'SUBSTITUIR' "@SUBSTITUI1",
 													 ) , 
 													(	 
 														 --#61#
-														 SELECT CONVERT(NUMERIC(15,2),ISNULL(NFE_ITENS.IPI_E,0)) AS "vIPIDevol" 
+														 SELECT CONVERT(NUMERIC(15,2),ISNULL(NFE_ITENS.IPI_E,0))	AS "vIPIDevol"
 														 --WHERE NFE.IPI_E > 0
 														 FOR XML PATH(''), TYPE 
 
 														 	  )   AS    IPI
-													--#109#-#110#-
 													WHERE	NFE.FIN_EMISSAO_NFE = 4 
 													AND		NFE.TIPO_OPERACAO='D' --#85#
 													--and NFE_ITENS.IPI > 0 /*#27# #31#*/ --#70#
@@ -2504,63 +2243,12 @@ SELECT  'SUBSTITUIR' "@SUBSTITUI1",
 ------------ impostoDevol 
 --#25#
 
-		-- #97# - Início
-			/*
-			------------- INFADPROD		
+------------- INFADPROD		
 			case when DBO.FX_REPLACE_CARACTER_ESPECIAL_NFE(DEFAULT,NFE_ITENS.INFORMACAO_ADICIONAL_PROD) = '' --#67#
 				then null 
-			else DBO.FX_REPLACE_CARACTER_ESPECIAL_NFE(DEFAULT,NFE_ITENS.INFORMACAO_ADICIONAL_PROD) end as "infAdProd"
-			------------- INFADPROD	
-			*/
-			case when (DBO.FX_REPLACE_CARACTER_ESPECIAL_NFE(default,NFE_ITENS.INFORMACAO_ADICIONAL_PROD) = '' and @UF_EMITENTE <> 'RJ') 
-				   or (DBO.FX_REPLACE_CARACTER_ESPECIAL_NFE(default,NFE_ITENS.INFORMACAO_ADICIONAL_PROD) = '' and @UF_EMITENTE='RJ' and @INF_AD_ALIQ_PROD_NA_OBS=1) then --#124#
-				null
-			else
-				case when
-					 @UF_EMITENTE = 'RJ' 
-					 and  NFE_ITENS.FECP_BASE = 0										/*  <- Trecho usado na gravação da tag vBCFCP   */
-					 and  NFE_ITENS.FECP_ALIQUOTA = 0									/*  <- Trecho usado na gravação da tag pFCP     */						
-					 and (NFE_ITENS.FECP_VALOR >= 0 and NFE_ITENS.FECP_BASE = 0)        /*  <- Trecho usado na gravação da tag vFCP     */
-					 and (NFE_ITENS.FECP_ST_BASE     + NFE_ITENS.FECP_STR_BASE = 0)		/*  <- Trecho usado na gravação da tag vBCFCPST */	
-					 and (NFE_ITENS.FECP_ST_ALIQUOTA + NFE_ITENS.FECP_STR_ALIQUOTA = 0) /*  <- Trecho usado na gravação da tag pFCPST   */
-					 and (NFE_ITENS.FECP_ST_VALOR    + NFE_ITENS.FECP_STR_VALOR = 0)    /*  <- Trecho usado na gravação da tag vFCPST   */ 
-				then
-					case when DBO.FX_REPLACE_CARACTER_ESPECIAL_NFE(default,NFE_ITENS.INFORMACAO_ADICIONAL_PROD) = '' AND @INF_AD_ALIQ_PROD_NA_OBS=0 then
-						 DBO.FX_REPLACE_CARACTER_ESPECIAL_NFE(default,'Não há Cobrança em favor do Fundo Estadual de Combate à Pobreza e às Desigualdades Sociais - FECP para o produto e/ou Serviço comercializado, conforme dispõe a Lei 8.405/2019.') -- #131#
-					else
-					     --#98#-
-						 DBO.FX_REPLACE_CARACTER_ESPECIAL_NFE(default,rtrim(ltrim(NFE_ITENS.INFORMACAO_ADICIONAL_PROD))) + CASE WHEN @INF_AD_ALIQ_PROD_NA_OBS=0 THEN ' ' + DBO.FX_REPLACE_CARACTER_ESPECIAL_NFE(default,'Não há Cobrança em favor do Fundo Estadual de Combate à Pobreza e às Desigualdades Sociais - FECP para o produto e/ou Serviço comercializado, conforme dispõe a Lei 8.405/2019.') ELSE '' END -- #119# -- #131#
-					end
-				else
-					DBO.FX_REPLACE_CARACTER_ESPECIAL_NFE(default,NFE_ITENS.INFORMACAO_ADICIONAL_PROD)
-				end
-			end as "infAdProd",
+				else DBO.FX_REPLACE_CARACTER_ESPECIAL_NFE(DEFAULT,NFE_ITENS.INFORMACAO_ADICIONAL_PROD) end as "infAdProd"
+------------- INFADPROD	
 
- 			--INICIO #137#
-            CASE WHEN (LTRIM(RTRIM(NFE_ITENS.OBS_CONTRIB_NOME)) <> '' AND LTRIM(RTRIM(NFE_ITENS.OBS_CONTRIB_CONTEUDO)) <> '')
-				THEN
-					(
- 						SELECT	LTRIM(RTRIM(NFE_ITENS.OBS_CONTRIB_NOME))		AS "@xCampo",  --#138#
-								--NFE_ITENS.OBS_CONTRIB_CONTEUDO	AS xTexto
-								DBO.FX_REPLACE_CARACTER_ESPECIAL_NFE(default,rtrim(ltrim(NFE_ITENS.OBS_CONTRIB_CONTEUDO))) AS xTexto
-						FOR XML PATH('obsCont'), TYPE	
-					) 
-				ELSE
-					NULL
-				END AS "obsItem",
-            CASE WHEN (LTRIM(RTRIM(NFE_ITENS.OBS_FISCO_NOME)) <> '' AND LTRIM(RTRIM(NFE_ITENS.OBS_FISCO_CONTEUDO)) <> '')
-				THEN  
-					(
-						SELECT	LTRIM(RTRIM(NFE_ITENS.OBS_FISCO_NOME))			AS "@xCampo", --#138#
-								--NFE_ITENS.OBS_FISCO_CONTEUDO		AS xTexto
-								DBO.FX_REPLACE_CARACTER_ESPECIAL_NFE(default,rtrim(ltrim(NFE_ITENS.OBS_FISCO_CONTEUDO))) AS xTexto
-						FOR XML PATH('obsFisco'), TYPE		
-					)
-				ELSE
-					NULL
-				END AS "obsItem"
-			--FINAL  #137#
-		-- #97# - Fim
 		FROM  W_IMPRESSAO_NFE_ITENS NFE_ITENS
 		WHERE  NF = @NOTAFISCAL  AND 
 				SERIE_NF = @SERIENOTA AND 
@@ -2579,10 +2267,10 @@ SELECT  'SUBSTITUIR' "@SUBSTITUI1",
 				SELECT 
 	
 					CONVERT(NUMERIC(15,2),NFE.ICMS_BASE)																		"vBC",
-					CONVERT(NUMERIC(15,2),case when NFE.ICMS_BST > 0 then (NFE.ICMS-NFE.ICMS_BST) else NFE.ICMS end)	  	  "vICMS", --#21#-#108#
-					--#99#-Início	
-					CONVERT(NUMERIC(15,2),case when NFE.ICMS_ZF > 0 then NFE.ICMS_ZF when NFE.ICMS_DESONERADO > 0 then NFE.ICMS_DESONERADO else 0 end)				"vICMSDeson",
-					--#99#-Fim
+					CONVERT(NUMERIC(15,2),case when NFE.ICMS_BST > 0 then NFE.ICMS_BST else NFE.ICMS end)						"vICMS", --#21#
+					
+					
+					CONVERT(NUMERIC(15,2),NFE.ICMS_ZF)																			"vICMSDeson",
 					--#68#
 					CASE 
 						WHEN CONVERT(NUMERIC(15,2),NFE.FECP_DEST) = 0															  
@@ -2680,21 +2368,14 @@ SELECT  'SUBSTITUIR' "@SUBSTITUI1",
 				--- TRANSPORTA      OK
 				( 
 					SELECT 	
-							--#110#-Início
-							CASE WHEN NFE.TRANSPORTADORA_PF_PJ = 0 and ISNULL(NFE.TRANSPORTADORA_CNPJ,'') != ''  THEN RTRIM(NFE.TRANSPORTADORA_CNPJ) ELSE NULL END "CNPJ",
-							CASE WHEN NFE.TRANSPORTADORA_PF_PJ = 1 and ISNULL(NFE.TRANSPORTADORA_CNPJ,'') != '' THEN RTRIM(NFE.TRANSPORTADORA_CNPJ) ELSE NULL END "CPF",
-							--#110#-Fim
-							--CASE WHEN ISNULL(NFE.TRANSPORTADORA,'') = '' THEN NULL ELSE DBO.FX_REPLACE_CARACTER_ESPECIAL_NFE(DEFAULT,NFE.TRANSPORTADORA) END	"xNome",--#96#
-							--#117#-Início
-							--CASE WHEN ISNULL(NFE.TRANSPORTADORA,'') = '' THEN NULL ELSE REPLACE(RTRIM(NFE.TRANSPORTADORA),'/','') END	"xNome", --#96#
+							CASE WHEN NFE.TRANSPORTADORA_PF_PJ = 0 THEN RTRIM(NFE.TRANSPORTADORA_CNPJ) ELSE NULL END "CNPJ",
+							CASE WHEN NFE.TRANSPORTADORA_PF_PJ = 1 THEN RTRIM(NFE.TRANSPORTADORA_CNPJ) ELSE NULL END "CPF",		
 							CASE WHEN ISNULL(NFE.TRANSPORTADORA,'') = '' THEN NULL ELSE DBO.FX_REPLACE_CARACTER_ESPECIAL_NFE(DEFAULT,NFE.TRANSPORTADORA) END	"xNome",
-							--#117#-Fim
 							CASE WHEN ((NFE.TRANSPORTADORA_PF_PJ = 1 AND NFE.TRANSPORTADORA_IE IS NULL) OR ISNULL(NFE.TRANSPORTADORA_IE,'') = '') THEN NULL ELSE DBO.FX_REPLACE_CARACTER_ESPECIAL_NFE(1,NFE.TRANSPORTADORA_IE) END	"IE", --#24#
 							CASE WHEN ISNULL(NFE.TRANSPORTADORA_ENDERECO,'') = '' THEN NULL ELSE  DBO.FX_REPLACE_CARACTER_ESPECIAL_NFE(DEFAULT,SUBSTRING(NFE.TRANSPORTADORA_ENDERECO,1,60)) END 	"xEnder", 
 							CASE WHEN ISNULL(NFE.TRANSPORTADORA_CIDADE,'') = '' THEN NULL ELSE  DBO.FX_REPLACE_CARACTER_ESPECIAL_NFE(DEFAULT,NFE.TRANSPORTADORA_CIDADE) END 	"xMun",
 							CASE WHEN ISNULL(NFE.TRANSPORTADORA_UF,'') = '' THEN NULL ELSE  RTRIM(NFE.TRANSPORTADORA_UF) END 	"UF"
-					WHERE NFE.TRANSPORTADORA IS NOT NULL 
-					and NFE.ENTREGA_CIF<>9 /*#125#*/
+					WHERE NFE.TRANSPORTADORA IS NOT NULL
 					FOR XML PATH(''), TYPE
 				) AS transporta,
 
@@ -2763,11 +2444,7 @@ SELECT  'SUBSTITUIR' "@SUBSTITUI1",
 							SUM(FAT.VORIG)													"vOrig",
 							--CASE WHEN SUM(FAT.VDESC) > 0 THEN SUM(FAT.VDESC) ELSE NULL END	"vDesc",	-- CAMPO REQUERIDO NO SCHEMA DA IT GROUP --#74#
 							SUM(FAT.VDESC)													"vDesc",	-- CAMPO REQUERIDO NO SCHEMA DA IT GROUP --#74#
-							/*#130#*/
-							SUM(CASE WHEN @BAIXA_IAC_FATURAMENTO = 1 AND FAT.VLIQ = 0
-									 THEN FAT.VORIG - FAT.VDESC
-									 ELSE FAT.VLIQ END)										"vLiq"		-- CAMPO REQUERIDO NO SCHEMA DA IT GROUP
-							/*#130#*/
+							SUM(FAT.VLIQ)													"vLiq"		-- CAMPO REQUERIDO NO SCHEMA DA IT GROUP
 					FROM DBO.FX_CTB_SIMULA_PARCELAS(CASE WHEN @TIPO_DOC = 'E' THEN @NOME_CLIFOR ELSE @FILIALNOTA END,@NOTAFISCAL,@SERIENOTA,@TIPO_DOC,NFE.COD_TRANSACAO) AS FAT --#74#
 					FOR XML PATH('fat'), TYPE
 				) ,
@@ -2777,12 +2454,7 @@ SELECT  'SUBSTITUIR' "@SUBSTITUI1",
 				( 
 					SELECT RTRIM(NDUP)										"nDup",   
 							CONVERT(CHAR(10),DUP.DVENC,21)					"dVenc",
-							--#130#CONVERT(NUMERIC(15,2),DUP.VLIQ)					"vDup" --#80#
-							/*#130#*/
-							CONVERT(NUMERIC(15,2),CASE WHEN @BAIXA_IAC_FATURAMENTO = 1 AND DUP.VLIQ = 0
-													   THEN DUP.VORIG - DUP.VDESC
-													   ELSE DUP.VLIQ END)	"vDup" --#80#
-							/*#130#*/
+							CONVERT(NUMERIC(15,2),DUP.VLIQ)					"vDup" --#80#
 					FROM DBO.FX_CTB_SIMULA_PARCELAS(CASE WHEN @TIPO_DOC = 'E' THEN @NOME_CLIFOR ELSE @FILIALNOTA END,@NOTAFISCAL,@SERIENOTA,@TIPO_DOC,NFE.COD_TRANSACAO) AS DUP --#61#
 					FOR XML PATH('dup'), TYPE
 				) 
@@ -2790,9 +2462,9 @@ SELECT  'SUBSTITUIR' "@SUBSTITUI1",
 			AND EXISTS(SELECT TIPO_AMBIENTE_LINX FROM DBO.W_INFORMACAO_PAGAMENTO WHERE FILIAL = @FILIALNOTA AND NF = @NOTAFISCAL AND SERIE_NF = @SERIENOTA AND TIPO_AMBIENTE_LINX = 'R') --#83# APEMAS NF RETAGUARDA
 			AND EXISTS(SELECT VORIG FROM DBO.FX_CTB_SIMULA_PARCELAS(CASE WHEN @TIPO_DOC = 'E' THEN @NOME_CLIFOR ELSE @FILIALNOTA END,@NOTAFISCAL,@SERIENOTA,@TIPO_DOC,NFE.COD_TRANSACAO)) AND --#61#
 			--#61#
-			(EXISTS(SELECT INFO_PGTO FROM DBO.W_IMPRESSAO_NFE WHERE INFO_PGTO IN ('02','03','15') AND FILIAL = @FILIALNOTA AND NF = @NOTAFISCAL AND SERIE_NF = @SERIENOTA) OR --#68#
-			 EXISTS(SELECT INFO_PGTO FROM DBO.W_IMPRESSAO_NFE WHERE INFO_PGTO IN ('02','03','15') AND NOME_CLIFOR = @NOME_CLIFOR AND NF = @NOTAFISCAL AND SERIE_NF = @SERIENOTA) OR --#68#
-			 EXISTS(SELECT TOP 1 INFO_PGTO FROM DBO.W_INFORMACAO_PAGAMENTO WHERE INFO_PGTO IN ('02','15') AND FILIAL = @FILIALNOTA AND NF = @NOTAFISCAL AND SERIE_NF = @SERIENOTA)) --#66# --#68# --#79#
+			(EXISTS(SELECT INFO_PGTO FROM DBO.W_IMPRESSAO_NFE WHERE INFO_PGTO IN ('02','03','15','99') AND FILIAL = @FILIALNOTA AND NF = @NOTAFISCAL AND SERIE_NF = @SERIENOTA) OR --#68#
+			 EXISTS(SELECT INFO_PGTO FROM DBO.W_IMPRESSAO_NFE WHERE INFO_PGTO IN ('02','03','15','99') AND NOME_CLIFOR = @NOME_CLIFOR AND NF = @NOTAFISCAL AND SERIE_NF = @SERIENOTA) OR --#68#
+			 EXISTS(SELECT TOP 1 INFO_PGTO FROM DBO.W_INFORMACAO_PAGAMENTO WHERE INFO_PGTO IN ('02','15','99') AND FILIAL = @FILIALNOTA AND NF = @NOTAFISCAL AND SERIE_NF = @SERIENOTA)) --#66# --#68# --#79#
 			--#61#
 			FOR XML PATH(''), TYPE
 		) AS cobr,
@@ -2802,8 +2474,7 @@ SELECT  'SUBSTITUIR' "@SUBSTITUI1",
 			SELECT
 				(
 					SELECT 	NFE.TIPO_PGTO_NFE											    "indPag", -- 0 - PAGTO A VISTA, 1 - PAGTO A PRAZO E 2 - OUTROS. --#69#
-							CONVERT(varchar(3),RTRIM(W_INF_PGTO.INFO_PGTO))					"tPag",							
-							CASE WHEN CONVERT(varchar(3),RTRIM(W_INF_PGTO.INFO_PGTO)) = '99' AND RTRIM(NFE.DESC_MEIO_PGTO) IS NOT NULL THEN RTRIM(NFE.DESC_MEIO_PGTO) ELSE NULL END "xPag", --#120# 
+							CONVERT(varchar(3),RTRIM(W_INF_PGTO.INFO_PGTO))					"tPag",
 							CASE WHEN W_INF_PGTO.TIPO_AMBIENTE_LINX IN ('R', 'B') --#76# PARA TRATAR AS PARTICULARIDADES DO LINX ERP. #83#-Inclusão do Tipo B2C.
 								THEN CONVERT(NUMERIC(15,2),RTRIM(W_INF_PGTO.VALOR))
 							ELSE
@@ -2865,26 +2536,17 @@ SELECT  'SUBSTITUIR' "@SUBSTITUI1",
 							W_INFORMACAO_PAGAMENTO.FILIAL = @FILIALNOTA
 					
 					FOR XML PATH(''), TYPE
-				)															
+				)
+																									
 				FOR XML PATH(''), TYPE	
-		) AS pag,
+
+			) AS pag,
 --#61#
 
---#120# --#121#
-------- INFINTERMED --  
-		
-		(
-				SELECT  
-						CASE WHEN NFE.INTERMERDIADOR_CNPJ IS NOT NULL THEN LTRIM(RTRIM(NFE.INTERMERDIADOR_CNPJ)) ELSE NULL END										"CNPJ",
-						CASE WHEN NFE.INTERMERDIADOR_IDCADINTTRAN IS NOT NULL THEN LTRIM(RTRIM(INTERMERDIADOR_IDCADINTTRAN)) ELSE NULL END							"idCadIntTran"				
-				WHERE RTRIM(NFE.INDICA_PRESENCA_COMPRADOR) IN (1,2,3,4,9) and NFE.INTERMERDIADOR_IDCADINTTRAN IS NOT NULL 
-				FOR XML PATH(''), TYPE
-		) as infIntermed,
---#120# --#121#
 
 ------- INFADIC --  
 		(	
-			SELECT 		
+			SELECT 					
 					-- #55# [Início]										
 					(  SELECT 						
 							@OBS_INTERESSE_FISCO
@@ -2905,58 +2567,18 @@ SELECT  'SUBSTITUIR' "@SUBSTITUI1",
 						WHERE 1= 2	
 						FOR XML PATH('obsFisco'), TYPE	
 					) ,
-					--#126#
-					--(
-					--	SELECT NFE.TIPO_PROCESSO  "indProc"
-					--	FOR XML PATH('indProc'), TYPE	
-					--),					
+					(
+						SELECT		0	"nProc",
+									0	"indProc"
+						WHERE 1= 2
+						FOR XML PATH(''), TYPE	
+					) AS procRef
 
-
-					/*#129# - Inicio
-					Retirada do que foi feito no ajuste 128*/			
-					--/*#128#*/
-					--(
-					--SELECT LTRIM(RTRIM(NFE.NUMERO_PROCESSO)) "nProc",
-					--									9	 "indProc"
-					--WHERE 1=1	
-					--FOR XML PATH(''), TYPE
-					--	) AS procRef
-					--						(
-					--	SELECT		0	"nProc",
-					--				0	"indProc"
-					--	WHERE 1= 2
-					--	FOR XML PATH(''), TYPE	
-					--) AS procRef
-					--	/*#129# - Final*/
-
-
-						/*#127#*/
-						--SELECT		0	"nProc",
-						--			0	"indProc"
-						--WHERE 1= 2
-
-						--SELECT NFE.TIPO_PROCESSO "indProc",
-
-	-- #135# #136# #142#
-                     CASE WHEN ISNULL(NFE.NUMERO_PROCESSO,'') = '' 
-                         THEN NULL 
-					   ELSE (
-                            (SELECT 
-                                CASE WHEN ISNULL(NFE.NUMERO_PROCESSO,'') = '' THEN NULL ELSE LTRIM(RTRIM(NFE.NUMERO_PROCESSO)) END "nProc",
-                                CASE WHEN ISNULL(NFE.TIPO_PROCESSO,'') = '' THEN NULL ELSE NFE.TIPO_PROCESSO END "indProc",
-                                CASE WHEN NFE.TIPO_PROCESSO = 0 THEN CASE WHEN ISNULL(NFE.ATO_CONCESSORIO,'') = '' THEN NULL ELSE NFE.ATO_CONCESSORIO END ELSE NULL END "tpAto"
-                             FOR XML PATH(''), TYPE 
-                            )
-                    --  --#126#
-                    --WHERE   NFE.TIPO_PROCESSO = 0 FOR XML PATH(''), TYPE /*#127#*/
-                        ) END AS procRef
-                    /*#128#*/
-    -- #135# #136# #142#
 			WHERE (@INFCOMPLEMENTAR <> '' AND @INFCOMPLEMENTAR IS NOT NULL) OR (@OBS_INTERESSE_FISCO <> '' AND @OBS_INTERESSE_FISCO IS NOT NULL)
 			FOR XML PATH(''), TYPE
 		) AS infAdic,
 
-	   		 
+
 ------- INFADIC
 ------- EXPORTA --  ESTA INFORMACAO FOI INCLUIDA EM 29/09/2010 E FOI CONVERSADO COM CESTARIA SOBRE A INCLUSAO DESTES CAMPOS
 		(	
