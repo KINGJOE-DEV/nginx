@@ -1,11 +1,8 @@
-# Usa la imagen base de Alpine con Nginx
+# Usa a imagem base oficial do Nginx
 FROM nginx:alpine
 
-# Copia el archivo de configuración personalizado al contenedor
-COPY nginx.conf /etc/nginx/nginx.conf
-
-# Expone el puerto 80 para que se pueda acceder al servidor web
+# Expõe a porta 80 para permitir acesso ao servidor web
 EXPOSE 80
 
-# Comando para iniciar Nginx cuando se ejecute el contenedor
+# Comando para iniciar o Nginx quando o contêiner for executado
 CMD ["nginx", "-g", "daemon off;"]

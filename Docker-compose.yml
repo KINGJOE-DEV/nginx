@@ -25,7 +25,7 @@ services:
         - "traefik.http.routers.producao_qualidade.priority=1"
         - "traefik.http.routers.producao_qualidade.tls.certresolver=le"
         - "traefik.http.routers.producao_qualidade.service=producao_qualidade"
-        - "traefik.http.services.producao_qualidade.loadbalancer.server.port=8000"
+        - "traefik.http.services.producao_qualidade.loadbalancer.server.port=8080"
 
 networks:
   traefik_public:
