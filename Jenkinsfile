@@ -6,13 +6,11 @@ pipeline {
                 sh 'docker build -t nginx-teste:v01 .'
             }
         }
-        /*
         stage("Apagar serviço no docker swarm") {
             steps {
-                sh 'docker service rm app-nginx-teste'
+                sh 'docker service rm app_producao_qualidade'
             }
         }
-        */
         stage("Subindo serviço / container") {
             steps {
                 sh 'docker stack deploy -c Docker-compose.yml  app'
